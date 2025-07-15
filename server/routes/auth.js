@@ -1,0 +1,42 @@
+const express = require('express');
+require("dotenv").config({ path: "./config.env" });
+const { OAuth2Client } = require('google-auth-library');
+const router = express.Router();
+const User = require('../models/User.js')
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+
+
+router.post('/google', async (req, res) => {
+    const {token} = req.body;
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: token, 
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        console.log(ticket);
+        const payload = ticket.getPayload();
+
+        const userInfo = {
+            googleId: payload.sub,
+            email: payload.email,
+            name: payload.name,
+            picture: payload.picture
+        };
+
+        let existingUser = await User.findOne({googleId: userInfo.googleId});
+
+        if(!existingUser) {
+            existingUser = await User.create(userInfo);
+        }
+        
+        res.status(200).json(existingUser);
+    } catch (error) {
+        console.log(`Error message: ${error}`);
+        res.status(401).json({error: "Invalid token"});
+    }
+});
+
+module.exports = router;
+
