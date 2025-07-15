@@ -7,8 +7,10 @@ connectDB();
 
 const app = express();
 
+//connecting to front end
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.use(express.json());  // important to parse JSON body before routes
+// important to parse JSON body before routes
+app.use(express.json());  
 
 app.use('/api/auth', require('./routes/auth.js'));
 

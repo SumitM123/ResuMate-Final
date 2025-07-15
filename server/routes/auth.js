@@ -17,7 +17,7 @@ router.post('/google', async (req, res) => {
         });
         console.log(ticket);
         const payload = ticket.getPayload();
-
+        
         const userInfo = {
             googleId: payload.sub,
             email: payload.email,
@@ -31,7 +31,7 @@ router.post('/google', async (req, res) => {
             existingUser = await User.create(userInfo);
         }
         
-        res.status(200).json(existingUser);
+        res.status(200).json(userInfo);
     } catch (error) {
         console.log(`Error message: ${error}`);
         res.status(401).json({error: "Invalid token"});
