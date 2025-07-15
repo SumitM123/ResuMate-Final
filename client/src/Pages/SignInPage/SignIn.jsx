@@ -2,10 +2,12 @@ import React from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
 
 function SignInPage() {
   //only receives the totken, not the full user profile.
   const navigate = useNavigate();
+  const { login } = useUser();
   //the onSuccess property of the GoogleLogin element automatically passes in credentialResponse as an argument to the function
   const handleSuccess = async (credentialResponse) => {
     try {
@@ -18,6 +20,8 @@ function SignInPage() {
       // Check if userData is valid before navigating
       if (userData.data) {
         console.log('User info:', userData.data);
+        // Save user data to context
+        login(userData.data);
         navigate('/application');
       } else {
         console.error('No user data received from server');
