@@ -6,7 +6,7 @@ const UserContext = createContext();
 // Custom hook to use the UserContext
 export const useUser = () => {
   //is a react hook that lets you read and subscribe to context from your compoent, allowing components to consume the values provided by a context.
-  //It takes in a Context object and returns the current context value probided by the nearest UerContext.Provider above in the component tree
+  //It takes in a Context object and returns the current context 'value' provided by the nearest UerContext.Provider above in the component tree
   const context = useContext(UserContext);
   if (!context) {
     throw new Error('useUser must be used within a UserProvider');
@@ -14,7 +14,8 @@ export const useUser = () => {
   return context;
 };
 
-// Provider component. It's responsible for managing the user's state and providing it to its children. HOLD THE DATA THAT CHILDREN HAVE ACCESS TO 
+// Provider component. IT'S A COMPONENT AT THE END OF THE DAY. THINK ABOUT THAT. It's responsible for managing the user's state and providing it to its children. HOLD THE DATA THAT CHILDREN HAVE ACCESS TO. 
+//UserProvider is where the state is managed, and any changes to that state lead to a new 'value' being passed down the context, updating the information available
 export const UserProvider = ({ children }) => {
   //the children prop represents whatever components are rendered between the opening and closing tags of the UserProvider component
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../context/UserContext';
 import './NavBar.css'; // optional styling
 
 function NavBar() {
@@ -34,7 +34,9 @@ function NavBar() {
                 border: 'none',
                 color: 'inherit',
                 cursor: 'pointer',
-                textDecoration: 'underline'
+                textDecoration: 'underline',
+                color: 'white',
+                fontSize: '18px'
               }}
             >
               Logout

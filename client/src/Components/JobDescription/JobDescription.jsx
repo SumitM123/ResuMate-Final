@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './JobDescription.css';
-
+import axios from 'axios';
+import { Link } from 'react-router-dom';
 function JobDescription() {
   const [jobText, setJobText] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
@@ -53,7 +54,7 @@ function JobDescription() {
     }
 
     setErrorMessage('');
-    navigate('/output');
+    navigate('/loadingPage');
   };
 
   return (

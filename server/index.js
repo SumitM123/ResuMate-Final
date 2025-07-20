@@ -14,6 +14,7 @@ app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth.js'));
 
+app.use('/loadingPage', require('./routes/fileParsingAndLogic.js'))
 app.get('/', (req, res) => {
   res.send('API is running...');
 });

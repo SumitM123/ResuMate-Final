@@ -2,7 +2,7 @@ import React from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../Components/context/UserContext';
 
 function SignInPage() {
   //only receives the totken, not the full user profile.
@@ -20,7 +20,7 @@ function SignInPage() {
       // Check if userData is valid before navigating
       if (userData.data) {
         console.log('User info:', userData.data);
-        // Save user data to context
+        // Save user data to context. You do so by accessing the value property of component through useUser() hook, and then modifying the properies of the value object
         login(userData.data);
         navigate('/application');
       } else {
