@@ -1,20 +1,36 @@
-import react, {useEffect} from 'react'
+import react, {useEffect, useState} from 'react'
 import axios from 'axios';
+import { useUser } from '../../Components/context/UserContext';
+import { useNavigate } from 'react-router-dom';
 
 //Hooks much be called inside functional components or custom hook functions. BUt the code inside the hooks runs based on the specifics
 
 function LoadingPage() {
+    const userInfo = useUser();
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     useEffect(() => {
-    //you're getting text items
-    const firstStep = axios.post('/loadingPage/', {
-      payload: file,
-    }).then( response => {
-      console.log("Successful sent to parser" + response);
-    }
-    ).catch( error => {
-      console.log("Here is the error" + error);
-    });
-  }, []);
+      //you're getting text items
+      if (userInfo.file) {
+        // Convert file to base64 for sending to server
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64Data = e.target.result.split(',')[1]; // Remove data:application/pdf;base64, prefix
+          
+          axios.post('/loadingPage/', {
+            payload: base64Data,
+          }).then( response => {
+            console.log("Successful sent to parser", response);
+          }
+          ).catch( error => {
+            console.log("Here is the error", error);
+          });
+        };
+        reader.readAsDataURL(userInfo.file);
+      }
+  }, [userInfo.file]);
 
     return (
     <div style={styles.container}>

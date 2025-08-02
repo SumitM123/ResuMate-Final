@@ -21,7 +21,10 @@ export const UserProvider = ({ children }) => {
 
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [jobDescription, setJobDescription] = useState('');
+  const [file, setFile] = useState(null);
+  const [parsedResumeData, setParsedResumeData] = useState(null);
+  
   // Check if user is already logged in (from localStorage). localStorage object is a built-in feature of modern web browswers. It allows web applications to store key-value pairs of data persistently within the user's brower
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -49,6 +52,12 @@ export const UserProvider = ({ children }) => {
     login,
     logout,
     isLoading,
+    file,
+    setFile,
+    jobDescription,
+    setJobDescription,
+    parsedResumeData,
+    setParsedResumeData,
     isAuthenticated: !!user
   };
 

@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import './JobDescription.css';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { useUser } from '../context/UserContext';
+
 function JobDescription() {
-  const [jobText, setJobText] = useState('');
-  const [selectedFile, setSelectedFile] = useState(null);
+  const userInfo = useUser();
   const [errorMessage, setErrorMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -15,7 +16,7 @@ function JobDescription() {
   const navigate = useNavigate();
 
   const updateJobText = (e) => {
-    setJobText(e.target.value);
+    userInfo.setJobDescription(e.target.value);
   };
 
   const checkFile = () => {
@@ -27,10 +28,11 @@ function JobDescription() {
     const fileExtension = file.name.split('.').pop().toLowerCase();
     if (fileExtension !== 'pdf') {
       fileUploadRef.current.value = '';
-      setSelectedFile(null);
+      userInfo.setFile(null);
       return "Wrong uploaded file. Only PDFs are allowed.";
     }
-    setSelectedFile(file);
+    userInfo.setFile(file);
+
     return "";
   };
 
@@ -52,6 +54,7 @@ function JobDescription() {
       setErrorMessage(fileError || jobError);
       return;
     }
+
 
     setErrorMessage('');
     navigate('/loadingPage');
@@ -78,7 +81,7 @@ function JobDescription() {
         <div className="right-panel">
           <h2>Paste Job Description</h2>
           <textarea
-            value={jobText}
+            value={userInfo.jobDescription}
             onChange={updateJobText}
             placeholder="Paste the job description here..."
             ref={jobDescriptionRef}
