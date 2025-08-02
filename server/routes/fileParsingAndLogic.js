@@ -5,22 +5,11 @@ require("dotenv").config({ path: "./config.env" });
 // import { GoogleGenAI } from "@google/genai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-// const chatModel = new ChatGoogleGenerativeAI(model="gemini-2.5-flash", apiKey=process.env.GOOGLE_API_KEY);
 
 const chatModel = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash",
   apiKey: process.env.GEMINI_API_KEY});
 
-
-const messages = [
-    new SystemMessage("You are a helpul Resume Parser AI assistant."),
-    new HumanMessage({
-    content: [
-      { type: 'text', text: 'Please parse the resume and provide me with the JSON data of the resume.' },
-      { type: 'image_url', image_url: imageDataUri }, // Include the image here
-    ],
-  }),
-];
 
 router.post('/', async (req, res) => { 
     try {
