@@ -11,6 +11,7 @@ const chatModel = new ChatGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY});
 
 
+// What is file in this case. 
 router.post('/', async (req, res) => { 
     try {
         const messages = [
@@ -18,7 +19,7 @@ router.post('/', async (req, res) => {
         new HumanMessage({
             content: [
             { type: 'text', text: 'Please parse the resume and provide me with the JSON data of the resume.' },
-            { type: 'image_url', image_url: req.body.file }, // Include the image here
+            { type: 'image_url', image_url: req.body.payLoad }, // Include the base64 data URL here
             ],
         }),
         ];
@@ -28,6 +29,22 @@ router.post('/', async (req, res) => {
             success: true,
             message: 'Document parsed successfully',
             data: response
+        });
+    } catch (error) {
+        console.error('Error processing request:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Error processing request: ' + error.message 
+        });
+    }
+});
+
+router.post('/JobDescriptionCheck', async (req, res) => { 
+    try {
+        //const messages = 
+        res.status(200).json({
+            success: true,
+            message: 'Job description check endpoint'
         });
     } catch (error) {
         console.error('Error processing request:', error);

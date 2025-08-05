@@ -6,33 +6,57 @@ import { useNavigate } from 'react-router-dom';
 //Hooks much be called inside functional components or custom hook functions. BUt the code inside the hooks runs based on the specifics
 
 function LoadingPage() {
-    const userInfo = useUser();
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const userInfo = useUser();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-      //you're getting text items
-      if (userInfo.file) {
-        // Convert file to base64 for sending to server
+  
+  const handleFileUpload = async () => {
+    if (!userInfo.file) {
+      console.log("No file to upload");
+      return;
+    }
+
+    try {
+      // Convert file to base64 using Promise-based approach
+      const base64Data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          const base64Data = e.target.result.split(',')[1]; // Remove data:application/pdf;base64, prefix
-          
-          axios.post('/loadingPage/', {
-            payload: base64Data,
-          }).then( response => {
-            console.log("Successful sent to parser", response);
-          }
-          ).catch( error => {
-            console.log("Here is the error", error);
-          });
-        };
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
         reader.readAsDataURL(userInfo.file);
-      }
-  }, [userInfo.file]);
+      });
 
-    return (
+      // Send to server
+      const response = await axios.post('/loadingPage/', {
+        payLoad: base64Data,
+      });
+
+      console.log("Successfully sent to parser", response);
+      
+      return response.content;
+    } catch (error) {
+      console.log("Here is the error", error);
+      setError(error.message);
+      throw error;
+    }
+  };
+  
+  const checkJobDescrition = async () => {
+    try {
+      const accuracyResponse = await axios.post('/loadingPage/jobDescriptionAccuracy');
+      
+    } catch (error) {
+      console.log("Here is the error" + error);
+    }
+  }
+  // This is the function where all the async functions are going to be called
+  useEffect(() => {
+    handleFileUpload();
+  }, []);
+
+
+  return (
     <div style={styles.container}>
       <div style={styles.spinner}></div>
       <h2 style={styles.text}>Loading, please wait...</h2>
