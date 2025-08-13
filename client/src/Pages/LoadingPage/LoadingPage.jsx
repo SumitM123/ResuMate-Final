@@ -11,7 +11,7 @@ function LoadingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  
+  //JSON with {sucess, message, and data}
   const handleFileUpload = async () => {
     if (!userInfo.file) {
       console.log("No file to upload");
@@ -41,18 +41,70 @@ function LoadingPage() {
       throw error;
     }
   };
-  
+  //JSON with {sucess, message, and data}
   const checkJobDescrition = async () => {
     try {
-      const accuracyResponse = await axios.post('/loadingPage/jobDescriptionAccuracy');
-      
+      const accuracyResponse = await axios.post('/loadingPage/jobDescriptionKeyWord', 
+        {
+          jobDesciption: userInfo.jobDesciption
+        }
+      );
+      console.log("Successfully sent to job description parser", accuracyResponse);
+      return accuracyResponse.data;
     } catch (error) {
       console.log("Here is the error" + error);
     }
   }
+/*
+
+  * When getting a response from the llm, it's ob AIMessage object. Inside the object, the content has the actual text of the message. 
+  * Now you have two variables, handleFileUpload, and checkJobDescription.
+    handleFileUpload has is a JSON, and the data is also a JSON
+    checkJobDescription is a JSON, with the data is not a JSON
+
+  * Create a hashmap of the keywords, and write a program that'll linearly search through the resume and 
+    check for those keywords. Then, it'll return to the user on what keywords aren't matched.
+
+  * Based on those keywords that are missing, create a prompt to the LLM that can take the missing keywords
+    and try to input that into the resume. Also determine if the way the user inputed the keywords is accrate
+      This is done by editing the JSON parser.
+
+  * Prompt to the LLM of the edited JSON structure, and input it into JAKE'S RESUME to make it ATS
+      friendly
+  
+  * Whenever possible, use the XYZ format for the Resume. X : What was achieved?
+      Y: How was it measured? And by how much did we it improve the outcome?
+      Z: What were the actions taken to achieve this outcome?
+      Ex: Instead of "Managed store inventory," use "Reduced inventory discrepancies by 20% (Y) 
+      through implementing a digital tracking system (Z)".
+
+  * Input the edited JSON structure into the JAKE'S RESUME, and then return the new resume to the user.
+
+*/
+const functionToCall = async () => {
+  try {
+    const resumeData = await handleFileUpload();
+    const jobDescriptionKeywords = await checkJobDescrition();
+
+    // Assuming you want to send both data to the server
+    const response = await axios.post('/loadingPage/editResume', {
+      resumeData: resumeData,
+      jobDescriptionKeywords: jobDescriptionKeywords
+    });
+
+    console.log("Successfully sent to edit resume", response);
+    // Navigate to the next page or show success message
+    navigate('/resumePreview', { state: { data: response.data } });
+  } catch (error) {
+    console.error("Error in editing resume:", error);
+    setError(error.message);
+  }
+};
+
+
   // This is the function where all the async functions are going to be called
   useEffect(() => {
-    handleFileUpload();
+    functionToCall();
   }, []);
 
 
