@@ -2,13 +2,12 @@ const express = require('express');
 const router = express.Router();
 const fs = require("fs");
 require("dotenv").config({ path: "./config.env" });
-// import { GoogleGenAI } from "@google/genai";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import {ChatGroq} from "@langchain/groq"
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { RunnableSequence } from "@langchain/core/runnables";
-import { partialDeepStrictEqual } from "assert";
-import { ChatOpenAI } from "@langchain/openai"; // ✅ import for OpenAI
+
+const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
+const { ChatGroq } = require("@langchain/groq");
+const { HumanMessage, SystemMessage } = require("@langchain/core/messages");
+const { RunnableSequence } = require("@langchain/core/runnables");
+const { ChatOpenAI } = require("@langchain/openai");
 
 const googleGemini = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash",
@@ -166,8 +165,9 @@ router.post('/editResume', async (req, res) => {
     const prompt2 = ChatPromptTemplate.fromMessages(message2);
     
     //This is of type string
-    const chain = new SimpleSequentialChain({
-        chains: [new LLMChain({llm : googleGemini, prompt: promp1}), new LLMCChain({llm: gorq, prompt2})],
+    const chain = new RunnableSequence({
+        first: new LLMChain({ llm: googleGemini, prompt: prompt1 }),
+        second: new LLMChain({ llm: gorq, prompt: prompt2 }),
         verbose: true
     });
 
@@ -204,7 +204,15 @@ router.post('/editResume', async (req, res) => {
             `
         })
     ];
-      
+    openAI.invoke(message3).then((latexResponse) => {
+        res.status(200).json({
+            success: true,
+            message: 'Resume formatted successfully',
+            data: latexResponse.content
+        });
+    }).catch((error) => {
+        console.error('Error formatting LaTeX resume:', error);
+    });
     try {
         //you need to send the response back to the front end
     } catch (error) {
@@ -212,6 +220,20 @@ router.post('/editResume', async (req, res) => {
         res.status(500).json({ 
             success: false,
             error: 'Error processing request: ' + error.message 
+        });
+    }
+});
+router.post('/convertToPDF', async (req, res) => {
+    const { latexContent } = req.body;
+
+    try {
+        // Assuming you have a function to convert LaTeX to PDF
+        
+    } catch (error) {
+        console.error('Error converting LaTeX to PDF:', error);
+        res.status(500).json({ 
+            success: false,
+            error: 'Error converting LaTeX to PDF: ' + error.message 
         });
     }
 });

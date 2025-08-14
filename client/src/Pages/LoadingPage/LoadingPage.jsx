@@ -1,6 +1,6 @@
 import react, {useEffect, useState} from 'react'
 import axios from 'axios';
-import { useUser } from '../../Components/context/UserContext';
+import { useUser } from '../../Components/context/UserContext.js'    // Navigate to the output page with the PDF and LaTeX content
 import { useNavigate } from 'react-router-dom';
 
 //Hooks much be called inside functional components or custom hook functions. BUt the code inside the hooks runs based on the specifics
@@ -42,17 +42,19 @@ function LoadingPage() {
     }
   };
   //JSON with {sucess, message, and data}
-  const checkJobDescrition = async () => {
+  const checkJobDescription = async () => {
     try {
       const accuracyResponse = await axios.post('/loadingPage/jobDescriptionKeyWord', 
         {
-          jobDesciption: userInfo.jobDesciption
+          jobDescription: userInfo.jobDescription
         }
       );
       console.log("Successfully sent to job description parser", accuracyResponse);
       return accuracyResponse.data;
     } catch (error) {
-      console.log("Here is the error" + error);
+      console.error("Error in job description parsing:", error);
+      setError(error.message);
+      throw error;
     }
   }
 /*
@@ -84,17 +86,45 @@ function LoadingPage() {
 const functionToCall = async () => {
   try {
     const resumeData = await handleFileUpload();
-    const jobDescriptionKeywords = await checkJobDescrition();
+    const jobDescriptionKeywords = await checkJobDescription();
 
     // Assuming you want to send both data to the server
-    const response = await axios.post('/loadingPage/editResume', {
+    const responseTex = await axios.post('/loadingPage/editResume', {
       resumeData: resumeData,
       jobDescriptionKeywords: jobDescriptionKeywords
     });
+    
+    // Convert LaTeX to PDF using LaTeX.Online API
+    try {
+      const formData = new FormData();
+      formData.append('latex', responseTex.data);
+      
+      const pdfResponse = await axios.post('https://latexonline.cc/compile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        responseType: 'blob' // Important: to handle PDF binary data
+      });
 
-    console.log("Successfully sent to edit resume", response);
+      // Create a blob URL for the PDF
+      const pdfBlob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Navigate to output page with the PDF URL
+      navigate('/outputPage', { 
+        state: { 
+          pdfUrl: pdfUrl,
+          latexContent: responseTex.data 
+        } 
+      });
+    } catch (error) {
+      console.error('Error converting LaTeX to PDF:', error);
+      setError('Failed to convert resume to PDF. Please try again.');
+    }
+
+    console.log("Successfully generated resume");
     // Navigate to the next page or show success message
-    navigate('/resumePreview', { state: { data: response.data } });
+    // navigate('/resumePreview', { state: { data: response.data } });
   } catch (error) {
     console.error("Error in editing resume:", error);
     setError(error.message);
