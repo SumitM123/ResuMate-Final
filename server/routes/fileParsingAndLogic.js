@@ -1,7 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const fs = require("fs");
-require("dotenv").config({ path: "./config.env" });
+const path = require('path');
+const pdfjsLib = require('pdfjs-dist');
+const canvas = require('canvas');
+require("dotenv").config({ path: path.join(__dirname, '../config.env') });
 
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 const { ChatGroq } = require("@langchain/groq");
@@ -9,9 +12,21 @@ const { HumanMessage, SystemMessage } = require("@langchain/core/messages");
 const { RunnableSequence } = require("@langchain/core/runnables");
 const { ChatOpenAI } = require("@langchain/openai");
 
+// Debug log to check if API key is loaded
+console.log('Environment loaded:', {
+    geminiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
+    configPath: path.join(__dirname, '../config.env')
+});
+
 const googleGemini = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash",
-  apiKey: process.env.GEMINI_API_KEY});
+    model: "gemini-pro",
+    apiKey: process.env.GEMINI_API_KEY
+});
+
+const googleGeminiVision = new ChatGoogleGenerativeAI({
+    model: "gemini-pro-vision",
+    apiKey: process.env.GEMINI_API_KEY
+});
 
 const gorq = new ChatGroq({
     model: "llama3-8b-8192",
@@ -21,32 +36,54 @@ const gorq = new ChatGroq({
 const openAI = new ChatOpenAI({
     model: "gpt-4.1-mini",
     apiKey: process.env.OPENAI_KEY
-  });
+});
 
 // What is file in this case. 
 router.post('/', async (req, res) => { 
     try {
+        // Validate the payload
+        if (!req.body.payLoad || typeof req.body.payLoad !== 'string') {
+            throw new Error('Invalid payload format');
+        }
+
+        // Ensure the base64 data is properly formatted
+        const base64Data = req.body.payLoad.split(',')[1] || req.body.payLoad;
+        
         const messages = [
-        new SystemMessage("You are a helpul Resume Parser AI assistant."),
+        new SystemMessage("You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."),
         new HumanMessage({
             content: [
-            { type: 'text', text: 'Please parse the resume and provide me with the JSON data of the resume.' },
-            { type: 'image_url', image_url: req.body.payLoad }, // Include the base64 data URL here
+            { 
+                type: 'text', 
+                text: 'Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }' 
+            },
+            { 
+                type: 'image_url', 
+                image_url: {
+                    mime_type: 'application/pdf',
+                    data: base64Data
+                }
+            }
             ],
         }),
         ];
-        const response = await googleGemini.invoke(messages);
-        console.log('Response from Google GenAI:', response);
+        const response = await googleGeminiVision.invoke(messages);
+        console.log('Response from Google GenAI Vision:', response);
         res.status(200).json({
             success: true,
             message: 'Document parsed successfully',
             data: response
         });
     } catch (error) {
-        console.error('Error processing request:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            payload: req.body.payLoad ? req.body.payLoad.substring(0, 100) + '...' : 'No payload'
+        });
         res.status(500).json({ 
             success: false,
-            error: 'Error processing request: ' + error.message 
+            error: 'Error processing request: ' + error.message,
+            details: error.stack
         });
     }
 });

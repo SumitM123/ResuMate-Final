@@ -12,10 +12,17 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@langchain/core": "^0.3.71",
+    "@langchain/google-genai": "^0.2.16",
+    "@langchain/groq": "^0.2.3",
+    "@langchain/openai": "^0.6.7",
+    "canvas": "^3.1.2",
     "cors": "^2.8.5",
     "dotenv": "^17.1.0",
     "express": "^5.1.0",
     "google-auth-library": "^10.1.0",
-    "mongoose": "^8.16.2"
+    "langchain": "^0.3.30",
+    "mongoose": "^8.16.2",
+    "pdfjs-dist": "^5.4.54"
   }
 }
