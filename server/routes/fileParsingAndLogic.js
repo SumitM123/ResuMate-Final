@@ -38,55 +38,58 @@ const openAI = new ChatOpenAI({
     apiKey: process.env.OPENAI_KEY
 });
 
-// What is file in this case. 
-router.post('/', async (req, res) => { 
-    try {
-        // Validate the payload
-        if (!req.body.payLoad || typeof req.body.payLoad !== 'string') {
-            throw new Error('Invalid payload format');
-        }
-
-        // Ensure the base64 data is properly formatted
-        const base64Data = req.body.payLoad.split(',')[1] || req.body.payLoad;
-        
-        const messages = [
-        new SystemMessage("You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."),
-        new HumanMessage({
-            content: [
-            { 
-                type: 'text', 
-                text: 'Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }' 
-            },
-            { 
-                type: 'image_url', 
-                image_url: {
-                    mime_type: 'application/pdf',
-                    data: base64Data
-                }
-            }
-            ],
-        }),
-        ];
-        const response = await googleGeminiVision.invoke(messages);
-        console.log('Response from Google GenAI Vision:', response);
-        res.status(200).json({
-            success: true,
-            message: 'Document parsed successfully',
-            data: response
-        });
-    } catch (error) {
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack,
-            payload: req.body.payLoad ? req.body.payLoad.substring(0, 100) + '...' : 'No payload'
-        });
-        res.status(500).json({ 
-            success: false,
-            error: 'Error processing request: ' + error.message,
-            details: error.stack
-        });
+router.post('/', async (req, res) => {
+  try {
+    if (!req.body.payLoad || typeof req.body.payLoad !== 'string') {
+      throw new Error('Invalid payload format');
     }
+
+    // Get base64 (strip data URI if present)
+    const base64Data = req.body.payLoad.split(',')[1] || req.body.payLoad;
+
+    const messages = [
+      new SystemMessage(
+        "You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."
+      ),
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }"
+          },
+          {
+            type: "input_file",
+            file_data: {
+              mime_type: "application/pdf",
+              data: base64Data
+            }
+          }
+        ],
+      }),
+    ];
+
+    const response = await googleGeminiVision.invoke(messages);
+
+    res.status(200).json({
+      success: true,
+      message: 'Document parsed successfully',
+      data: response,
+    });
+
+  } catch (error) {
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      payload: req.body.payLoad ? req.body.payLoad.substring(0, 100) + '...' : 'No payload'
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Error processing request: ' + error.message,
+      details: error.stack
+    });
+  }
 });
+
 
 //this is to extract the keywords from the job description
 router.post('/JobDescriptionKeyWord', async (req, res) => { 

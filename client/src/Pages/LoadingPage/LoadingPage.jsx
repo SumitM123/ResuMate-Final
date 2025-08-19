@@ -55,7 +55,7 @@ function LoadingPage() {
 
       console.log("Successfully sent to parser", response);
       
-      return response.content;
+      return response.data.data;
     } catch (error) {
       console.log("Here is the error", error);
       setError(error.message);
