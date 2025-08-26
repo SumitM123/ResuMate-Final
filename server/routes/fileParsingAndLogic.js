@@ -95,9 +95,10 @@ router.post(
       // 5. Send back model response
       res.status(200).json({
         success: true,
-        parsedResume: response
+        parsedResume: response.content
       });
-
+      console.log("JSON has been extracted.");
+      console.log("The response content object from AI model: " + JSON.stringify(response.content));
     } catch (err) {
       console.error("Error parsing uploading resume:", err);
       res.status(500).json({ success: false, error: err.message });
@@ -184,7 +185,7 @@ router.post('/JobDescriptionKeyWord', async (req, res) => {
         ];
 
         const response = await gorq.invoke(messages);
-        console.log('Job description keywords extracted:', response);
+        console.log('Job description keywords extracted:', response.content);
         
         res.status(200).json({
             success: true,

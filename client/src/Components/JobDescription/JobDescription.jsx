@@ -43,7 +43,37 @@ function JobDescription() {
     }
     return "";
   };
-
+  const serverResponseJobDescription = async () => {
+    const jobDescription = userInfo.JobDescription;
+    try {
+      const response = await axios.post('/loadingPage/JobDescriptionKeyWord', jobDescription, {
+        header: { 'Content-Type': 'text/plain' }
+      });
+      return response;
+    } catch (err) {
+      console.log("Error in getting the keyword extraction: " + err);
+      return "Error";
+    }
+  }
+  const responseFromServerJSON = async () => {
+    const sendToServer = new FormData();
+    sendToServer.append('resume', userInfo.file);
+    //sendToServer.append('jobDescription', userInfo.jobDescription);
+    try {
+    const serverResponse = await axios.post(
+      '/loadingPage/extractJSONAndKeywords',
+      sendToServer,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      }
+    );
+    console.log("JSON has been extracted");
+    return serverResponse;
+    } catch (err) {
+      console.error("Upload failed:", err);
+      return "Error has occured with the server response";
+    }
+  }
   const handleClick = (e) => {
     e.preventDefault();
     setSubmitted(true);
@@ -59,31 +89,15 @@ function JobDescription() {
 
     console.log("Checking if surpassed fileError or jobError");
     setErrorMessage('');
-
-    const serverResponse = responseFromServer();
-
-    console.log("Server Response object: " + JSON.stringify(serverResponse));
+    //AI Message.content is what's being stored. 
+    //const serverResponseJSON = responseFromServerJSON(); <- This works, but too much token use. So don't want to reiterate. 
+    //userInfo.setParsedResumeData(serverResponseJSON.data.parsedResume)
+    const serverResponseJobDescription = serverResponseJobDescription();
+    userInfo.setJobDescription(serverResponseJobDescription.data.keyWordExtraction);
+    //maybe create a context that's going to store the jobdescription and the JSON extraction of the resume
+    //console.log("Server Response object: " + JSON.stringify(serverResponse));
     navigate('/loadingPage');
   };
-  const responseFromServer = async () => {
-    const sendToServer = new FormData();
-    sendToServer.append('resume', userInfo.file);
-    sendToServer.append('jobDescription', userInfo.jobDescription);
-    try {
-    const serverResponse = await axios.post(
-      '/loadingPage/extractJSONAndKeywords',
-      sendToServer,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      }
-    );
-    console.log("JSON has been extracted");
-    return serverResponse;
-  } catch (err) {
-    console.error("Upload failed:", err);
-    return "Error has occured with the server response";
-  }
-  }
   return (
       <form enctype="multipart/form-data" method='post'>
         <div className="job-wrapper">

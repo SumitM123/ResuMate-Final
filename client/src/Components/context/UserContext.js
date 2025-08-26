@@ -22,6 +22,7 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [jobDescription, setJobDescription] = useState('');
+  const [jobkeywords, setJobKeywords] = useState('');
   const [file, setFile] = useState(null);
   const [parsedResumeData, setParsedResumeData] = useState(null);
   
@@ -58,7 +59,9 @@ export const UserProvider = ({ children }) => {
     setJobDescription,
     parsedResumeData,
     setParsedResumeData,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    jobkeywords,
+    setJobKeywords
   };
 
   return (
