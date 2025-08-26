@@ -11,7 +11,7 @@ const { ChatGroq } = require("@langchain/groq");
 const { HumanMessage, SystemMessage } = require("@langchain/core/messages");
 const { RunnableSequence } = require("@langchain/core/runnables");
 const { ChatOpenAI } = require("@langchain/openai");
-
+const multer = require('multer');
 // Debug log to check if API key is loaded
 console.log('Environment loaded:', {
     geminiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
@@ -37,8 +37,23 @@ const openAI = new ChatOpenAI({
     model: "gpt-4.1-mini",
     apiKey: process.env.OPENAI_KEY
 });
+const uploadDir = path.join(__dirname, "../uploads");
 
-router.post('/', async (req, res) => {
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalName);
+    }
+})
+const upload = multer({
+    storage: storage
+});
+
+router.post('/', upload.fields([
+    {name: 'resume', maxCount: 1}
+]), async (req, res) => {
   try {
     if (!req.body.payLoad || typeof req.body.payLoad !== 'string') {
       throw new Error('Invalid payload format');
@@ -93,6 +108,7 @@ router.post('/', async (req, res) => {
 
 //this is to extract the keywords from the job description
 router.post('/JobDescriptionKeyWord', async (req, res) => { 
+    //send formData to this shi where the body will have the job description
     try {
         const messages = [
             new SystemMessage("You are an expert job description analyzer. Extract the most relevant keywords that a candidate should have on their resume to match this job posting."),

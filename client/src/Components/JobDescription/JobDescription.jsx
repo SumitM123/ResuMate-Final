@@ -47,6 +47,7 @@ function JobDescription() {
     e.preventDefault();
     setSubmitted(true);
 
+    
     const fileError = checkFile();
     const jobError = checkJobDescription();
 
