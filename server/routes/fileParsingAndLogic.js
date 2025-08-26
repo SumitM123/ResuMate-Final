@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require('path');
-const pdfjsLib = require('pdfjs-dist');
-const canvas = require('canvas');
+//const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js");
+//const canvas = require('canvas');
 require("dotenv").config({ path: path.join(__dirname, '../config.env') });
 
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
@@ -12,6 +12,7 @@ const { HumanMessage, SystemMessage } = require("@langchain/core/messages");
 const { RunnableSequence } = require("@langchain/core/runnables");
 const { ChatOpenAI } = require("@langchain/openai");
 const multer = require('multer');
+
 // Debug log to check if API key is loaded
 console.log('Environment loaded:', {
     geminiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
@@ -19,7 +20,7 @@ console.log('Environment loaded:', {
 });
 
 const googleGemini = new ChatGoogleGenerativeAI({
-    model: "gemini-pro",
+    model: "gemini-2.5-pro",
     apiKey: process.env.GEMINI_API_KEY
 });
 
@@ -44,66 +45,119 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, file.originalName);
+        cb(null, file.originalname);
     }
 })
 const upload = multer({
     storage: storage
 });
 
-router.post('/', upload.fields([
-    {name: 'resume', maxCount: 1}
-]), async (req, res) => {
-  try {
-    if (!req.body.payLoad || typeof req.body.payLoad !== 'string') {
-      throw new Error('Invalid payload format');
-    }
+//might have to combine the JSON extraction and job description extraction into 1
 
-    // Get base64 (strip data URI if present)
-    const base64Data = req.body.payLoad.split(',')[1] || req.body.payLoad;
+router.post(
+  '/extractJSONAndKeywords',
+  upload.single('resume'),
+  async (req, res) => {
+    console.log("Checking if resume has been uploaded successfully");
+    try {
 
-    const messages = [
-      new SystemMessage(
-        "You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."
-      ),
-      new HumanMessage({
-        content: [
-          {
-            type: "text",
-            text: "Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }"
-          },
-          {
-            type: "input_file",
-            file_data: {
+      // 1. Read uploaded file
+      const filePath = path.join(uploadDir, req.file.filename);
+      const pdfBytes = await fs.readFile(filePath);
+
+      // 2. Encode to base64
+      const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+
+      // 3. Build messages for chat model
+      const messages = [
+        new SystemMessage(
+          "You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."
+        ),
+        new HumanMessage({
+          content: [
+            {
+              type: "text",
+              text: "Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }"
+            },
+            {
+              type: "file",
+              source_type: "base64",
               mime_type: "application/pdf",
-              data: base64Data
+              data: pdfBase64
             }
-          }
-        ],
-      }),
-    ];
+          ]
+        })
+      ];
 
-    const response = await googleGeminiVision.invoke(messages);
+      // 4. Await response from chat model
+      const response = await googleGemini.invoke(messages);
 
-    res.status(200).json({
-      success: true,
-      message: 'Document parsed successfully',
-      data: response,
-    });
+      // 5. Send back model response
+      res.status(200).json({
+        success: true,
+        parsedResume: response
+      });
 
-  } catch (error) {
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      payload: req.body.payLoad ? req.body.payLoad.substring(0, 100) + '...' : 'No payload'
-    });
-    res.status(500).json({
-      success: false,
-      error: 'Error processing request: ' + error.message,
-      details: error.stack
-    });
+    } catch (err) {
+      console.error("Error parsing uploading resume:", err);
+      res.status(500).json({ success: false, error: err.message });
+    }
   }
-});
+);
+
+// router.post('/', upload.fields([
+//     {name: 'resume', maxCount: 1}
+// ]), async (req, res) => {
+//   try {
+//     if (!req.body.payLoad || typeof req.body.payLoad !== 'string') {
+//       throw new Error('Invalid payload format');
+//     }
+
+//     // Get base64 (strip data URI if present)
+//     const base64Data = req.body.payLoad.split(',')[1] || req.body.payLoad;
+
+//     const messages = [
+//       new SystemMessage(
+//         "You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."
+//       ),
+//       new HumanMessage({
+//         content: [
+//           {
+//             type: "text",
+//             text: "Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }"
+//           },
+//           {
+//             type: "input_file",
+//             file_data: {
+//               mime_type: "application/pdf",
+//               data: base64Data
+//             }
+//           }
+//         ],
+//       }),
+//     ];
+
+//     const response = await googleGeminiVision.invoke(messages);
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Document parsed successfully',
+//       data: response,
+//     });
+
+//   } catch (error) {
+//     console.error('Error details:', {
+//       message: error.message,
+//       stack: error.stack,
+//       payload: req.body.payLoad ? req.body.payLoad.substring(0, 100) + '...' : 'No payload'
+//     });
+//     res.status(500).json({
+//       success: false,
+//       error: 'Error processing request: ' + error.message,
+//       details: error.stack
+//     });
+//   }
+// });
 
 
 //this is to extract the keywords from the job description

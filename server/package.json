@@ -23,6 +23,7 @@
     "google-auth-library": "^10.1.0",
     "langchain": "^0.3.30",
     "mongoose": "^8.16.2",
+    "multer": "^2.0.2",
     "pdfjs-dist": "^5.4.54"
   }
 }

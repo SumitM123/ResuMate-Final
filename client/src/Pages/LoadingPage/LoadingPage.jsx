@@ -155,9 +155,10 @@ const functionToCall = async () => {
 
 
   // This is the function where all the async functions are going to be called
-  useEffect(() => {
+  
+  /*useEffect(() => {
     functionToCall();
-  }, []);
+  }, []);*/
 
 
   return (
