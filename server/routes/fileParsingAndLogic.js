@@ -55,7 +55,7 @@ const upload = multer({
 //might have to combine the JSON extraction and job description extraction into 1
 
 router.post(
-  '/extractJSONAndKeywords',
+  '/extractJSON',
   upload.single('resume'),
   async (req, res) => {
     console.log("Checking if resume has been uploaded successfully");
@@ -190,7 +190,7 @@ router.post('/JobDescriptionKeyWord', async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Keywords extracted successfully',
-            data: response.content
+            keyWordExtraction: response.content
         });
     } catch (error) {
         console.error('Error processing request:', error);

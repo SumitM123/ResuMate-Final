@@ -36,3 +36,5 @@ function OutputPage() {
     </div>
   );
 }
+
+export default OutputPage;

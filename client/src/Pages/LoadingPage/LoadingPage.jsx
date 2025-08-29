@@ -157,13 +157,6 @@ function LoadingPage() {
   
 
 
-  // This is the function where all the async functions are going to be called
-  
-  /*useEffect(() => {
-    functionToCall();
-  }, []);*/
-
-
   return (
     <div style={styles.container}>
       <div style={styles.spinner}></div>
