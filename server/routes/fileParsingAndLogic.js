@@ -290,7 +290,7 @@ router.post('/editResume', async (req, res) => {
 
     */ 
     //can't just upload a file. Have to encode the file and pass into system message
-    const latexTemplate = fs.readFileSync("'../lib/JakeResume.tex'", "utf8");
+    const latexTemplate = await fs.readFile("'../lib/JakeResume.tex'", "utf8");
 
     const message3 = [
         new SystemMessage({
@@ -323,16 +323,11 @@ router.post('/editResume', async (req, res) => {
         });
     }).catch((error) => {
         console.error('Error formatting LaTeX resume:', error);
-    });
-    try {
-        //you need to send the response back to the front end
-    } catch (error) {
-        console.error('Error processing request:', error);
         res.status(500).json({ 
             success: false,
             error: 'Error processing request: ' + error.message 
         });
-    }
+    });
 });
 router.post('/convertToPDF', async (req, res) => {
     const { latexContent } = req.body;

@@ -1,34 +1,38 @@
-import React from 'react';
-import { useUser } from '../../Components/context/UserContext';
+import { useLocation } from 'react-router-dom';
 
 function OutputPage() {
-    const userInfo = useUser();
-    const parsedData = userInfo.parsedResumeData;
+  const location = useLocation();
+  const pdfUrl = location.state.pdfUrl;
 
-    if (!parsedData) {
-        return (
-            <div style={{ padding: '20px', textAlign: 'center' }}>
-                <h1>No parsed data available</h1>
-                <p>Please upload a resume first.</p>
-            </div>
-        );
-    }
+  const handleDownload = () => {
+    // Create a temporary anchor element
+    const link = document.createElement('a');
 
-    return (
-        <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-            <h1>Affinda Resume Parsing Results</h1>
-            
-            {/* Display Affinda's JSON structure */}
-            <div style={{ marginBottom: '30px' }}>
-                <h2>Affinda JSON Response</h2>
-                <div style={{ backgroundColor: '#f5f5f5', padding: '15px', borderRadius: '5px' }}>
-                    <pre style={{ fontSize: '12px', overflow: 'auto', whiteSpace: 'pre-wrap' }}>
-                        {JSON.stringify(parsedData, null, 2)}
-                    </pre>
-                </div>
-            </div>
-        </div>
-    );
+    // Set the href to the blob URL
+    link.href = pdfUrl;
+
+    // Set the `download` attribute with a desired filename
+    link.download = 'document.pdf'; // Or a dynamic name like `document-${Date.now()}.pdf`
+
+    // Append the link to the document body (needed for Firefox)
+    document.body.appendChild(link);
+
+    // Programmatically click the link to trigger the download
+    link.click();
+
+    // Clean up: remove the temporary link and revoke the blob URL
+    document.body.removeChild(link);
+    URL.revokeObjectURL(pdfUrl); // Important for memory management
+  };
+
+  return (
+    <div>
+      <h1>Your PDF is Ready!</h1>
+      {/* You can display the PDF in an iframe for a preview */}
+      <iframe src={pdfUrl} width="100%" height="500px" title="PDF Preview"></iframe>
+      <button onClick={handleDownload}>
+        Download PDF
+      </button>
+    </div>
+  );
 }
-
-export default OutputPage;

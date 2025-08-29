@@ -93,7 +93,7 @@ function JobDescription() {
     //const serverResponseJSON = responseFromServerJSON(); <- This works, but too much token use. So don't want to reiterate. 
     //userInfo.setParsedResumeData(serverResponseJSON.data.parsedResume)
     const serverResponseJobDescription = serverResponseJobDescription();
-    userInfo.setJobDescription(serverResponseJobDescription.data.keyWordExtraction);
+    userInfo.setJobKeywords(serverResponseJobDescription.data.keyWordExtraction);
     //maybe create a context that's going to store the jobdescription and the JSON extraction of the resume
     //console.log("Server Response object: " + JSON.stringify(serverResponse));
     navigate('/loadingPage');
