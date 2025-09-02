@@ -48,7 +48,7 @@ function JobDescription() {
     const jobDescription = userInfo.jobDescription;
     try {
       const response = await axios.post('/loadingPage/JobDescriptionKeyWord', {jobDescription}, {
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       });
       return response;
     } catch (err) {
@@ -98,19 +98,69 @@ function JobDescription() {
         email: "smantri@ucdavis.edu",
         phone: "669-268-7993",
         location: "Mountain House, CA",
-        links: [{ label: "GitHub", url: "" }]
+        links: [
+          { label: "GitHub", url: "" }
+        ]
       },
       experience: [
         {
           company: "UC Davis Research - Dr. Tagkopoulos Lab",
+          title: null,
           startDate: "May 2025",
           endDate: "Present",
+          location: null,
+          description: null,
           responsibilities: [
-            "Understood the D3PM model implementation and fine tuning..."
+            "Understood the D3PM model implementation and fine tuning of the model in creating synthetic sequences that can be tested in real world"
+          ]
+        },
+        {
+          company: "Artificial Intelligence Student Collective",
+          title: "SWE in Objected Detection",
+          startDate: "October 2024",
+          endDate: "Present",
+          location: null,
+          description: null,
+          responsibilities: [
+            "Web-Scraping to gather data for our test set via Selenium and chrome Web Driver",
+            "Used You Only Look Once (YOLO) model through TensorFlow framework to provide live haptic feedback to the user"
           ]
         }
       ],
-      skills: ["Python", "C++", "Java", "R"]
+      education: [
+        {
+          institution: "University of California, Davis",
+          degree: "Computer Science and Statistics (Machine Learning Track)",
+          startDate: null,
+          endDate: null,
+          gpa: null
+        }
+      ],
+      skills: [
+        "Python 3",
+        "C++",
+        "Java",
+        "R",
+        "MATLAB",
+        "HTML",
+        "CSS",
+        "Node.JS",
+        "Javascript",
+        "MongoDB"
+      ],
+      projects: [
+        {
+          name: "Image Segmentation",
+          startDate: "June 2024",
+          endDate: "July 2024",
+          description: [
+            "Built a U-Net convolutional neural network in TensorFlow/Keras for semantic image segmentation on a self-driving car dataset.",
+            "Achieved 90% accuracy by designing and testing modular U-Net blocks (convolution, pooling, upsampling) to ensure correct architecture using model summaries"
+          ],
+          link: null
+        }
+      ],
+      certifications: []
     });
     try {
       const serverResponse = await serverResponseJobDescription();
@@ -131,7 +181,7 @@ function JobDescription() {
     //userInfo.setJobKeywords(serverResponse.data.keyWordExtraction);
     //maybe create a context that's going to store the jobdescription and the JSON extraction of the resume
     //console.log("Server Response object: " + JSON.stringify(serverResponse));
-    navigate('/loadingPage');
+    //navigate('/loadingPage');
   };
   return (
       <form encType="multipart/form-data" method='post'>

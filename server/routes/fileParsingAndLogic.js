@@ -1,56 +1,63 @@
-const express = require('express');
-const router = express.Router();
-const fs = require("fs").promises;
-const path = require('path');
-//const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js");
-//const canvas = require('canvas');
-require("dotenv").config({ path: path.join(__dirname, '../config.env') });
+import express from "express";
+import fs from "fs/promises";
+import path from "path";
+import multer from "multer";
+import { fileURLToPath } from "url";
 
-const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
-const { ChatGroq } = require("@langchain/groq");
-const { HumanMessage, SystemMessage } = require("@langchain/core/messages");
-const { RunnableSequence } = require("@langchain/core/runnables");
-const { ChatOpenAI } = require("@langchain/openai");
-const multer = require('multer');
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatGroq } from "@langchain/groq";
+import { ChatOpenAI } from "@langchain/openai";
+
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { LLMChain } from "langchain/chains";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
+// Fix __dirname for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const router = express.Router();
 
 // Debug log to check if API key is loaded
-console.log('Environment loaded:', {
-    geminiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
-    configPath: path.join(__dirname, '../config.env')
+console.log("Environment loaded:", {
+  geminiKeyLength: process.env.GEMINI_API_KEY
+    ? process.env.GEMINI_API_KEY.length
+    : 0,
+  configPath: path.join(__dirname, "../config.env"),
 });
 
 const googleGemini = new ChatGoogleGenerativeAI({
-    model: "gemini-2.5-pro",
-    apiKey: process.env.GEMINI_API_KEY
+  model: "gemini-2.5-pro",
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 const googleGeminiVision = new ChatGoogleGenerativeAI({
-    model: "gemini-pro-vision",
-    apiKey: process.env.GEMINI_API_KEY
+  model: "gemini-pro-vision",
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 const gorq = new ChatGroq({
-    model: "llama3-8b-8192",
-    apiKey: process.env.GROQ_API_KEY
+  model: "llama-3.3-70b-versatile",
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 const openAI = new ChatOpenAI({
-    model: "gpt-4.1-mini",
-    apiKey: process.env.OPENAI_KEY
+  model: "gpt-4.1-mini",
+  apiKey: process.env.OPENAI_KEY,
 });
+
 const uploadDir = path.join(__dirname, "../uploads");
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname);
-    }
-})
-const upload = multer({
-    storage: storage
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
 });
+const upload = multer({ storage });
 
 //might have to combine the JSON extraction and job description extraction into 1
 
@@ -164,6 +171,8 @@ router.post(
 //this is to extract the keywords from the job description
 router.post('/JobDescriptionKeyWord', async (req, res) => { 
     //send formData to this shi where the body will have the job description
+    // console.log("Here is the job description from the req object: " + req.body.jobDescription);
+    // console.log("The job description that's not in the body: " + req.jobDescription);
     try {
         const messages = [
             new SystemMessage("You are an expert job description analyzer. Extract the most relevant keywords that a candidate should have on their resume to match this job posting."),
@@ -177,11 +186,8 @@ router.post('/JobDescriptionKeyWord', async (req, res) => {
             5. Education/Certifications (degrees, certificates, qualifications)
             6. Job Functions (responsibilities, actions, duties)
 
-            Job Description:
-            ${req.body.jobDescription}
-
             Focus on extracting specific, actionable keywords that would be found on a resume. Avoid generic terms.`
-                        })
+            })
         ];
 
         const response = await gorq.invoke(messages);
@@ -290,7 +296,7 @@ router.post('/editResume', async (req, res) => {
 
     */ 
     //can't just upload a file. Have to encode the file and pass into system message
-    const latexTemplate = await fs.readFile("'../lib/JakeResume.tex'", "utf8");
+    const latexTemplate = await fs.readFile(path.join(__dirname, "../lib/JakeResume.tex"), "utf8");
 
     const message3 = [
         new SystemMessage({
@@ -343,4 +349,5 @@ router.post('/convertToPDF', async (req, res) => {
         });
     }
 });
-module.exports = router;
+export default router;
+

@@ -1,6 +1,7 @@
 {
   "name": "resumate",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -12,7 +13,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@langchain/core": "^0.3.71",
     "@langchain/google-genai": "^0.2.16",
     "@langchain/groq": "^0.2.3",
     "@langchain/openai": "^0.6.7",
@@ -21,7 +21,7 @@
     "dotenv": "^17.1.0",
     "express": "^5.1.0",
     "google-auth-library": "^10.1.0",
-    "langchain": "^0.3.30",
+    "langchain": "^0.3.31",
     "mongoose": "^8.16.2",
     "multer": "^2.0.2",
     "pdfjs-dist": "^5.4.54"
