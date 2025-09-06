@@ -7,11 +7,9 @@ const userSchema = new mongoose.Schema({
         unique: true
     }, 
     email: String,
-    name: String, 
-    picture: String, 
+    name: String
 });
 
-//creates a class named users with the blueprint of a user schema. Using this class, you can now add documents to this
 const User = mongoose.model('User', userSchema);
-
+//creates a class named users with the blueprint of a user schema. Using this class, you can now add documents to this
 export default User;

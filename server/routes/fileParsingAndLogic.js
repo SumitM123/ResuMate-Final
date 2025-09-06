@@ -12,6 +12,8 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { LLMChain } from "langchain/chains";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import FormData from "form-data";
+
 
 // Fix __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -287,7 +289,7 @@ router.post('/editResume', async (req, res) => {
         second: new LLMChain({ llm: gorq, prompt: prompt2 }),
         verbose: true
     });
-
+    const chainResult = await chain.invoke({resumeData, jobDescriptionKeywords});
     /*
         I provide it the Jake's resume format, and I'll tell the LLM to implement the edited JSON structure into the 
         resume format. Then save that as a .tex file. Then use an external API to convert that .tex file into a 
@@ -296,6 +298,8 @@ router.post('/editResume', async (req, res) => {
 
     */ 
     //can't just upload a file. Have to encode the file and pass into system message
+    console.log("Finished the runnable sequence");
+    console.log("The final chain result of the JSON structured resume after editing and before turning it into LaTeX: " + chain); 
     const latexTemplate = await fs.readFile(path.join(__dirname, "../lib/JakeResume.tex"), "utf8");
 
     const message3 = [
@@ -309,6 +313,7 @@ router.post('/editResume', async (req, res) => {
                 3. If a placeholder's value is missing in the JSON, leave it empty but keep the placeholder's LaTeX structure intact.
                 4. Escape special LaTeX characters in user-provided text: %, $, _, &, #, {, }.
                 5. Return **only** the completed LaTeX code — no comments, no explanations, no extra formatting outside of LaTeX.
+                6. ENSURE THE FINAL LaTeX COMPILES WITHOUT ERRORS. THIS IS ESSENTIAL.
                 
                 TEMPLATE START:
                 ${latexTemplate}
@@ -317,7 +322,7 @@ router.post('/editResume', async (req, res) => {
         }),
         new HumanMessage({
             content: `
-                This is the JSON-structured resume to populate into the LaTeX template: ${chain}
+                This is the JSON-structured resume to populate into the LaTeX template: ${chainResult}
             `
         })
     ];
@@ -335,19 +340,25 @@ router.post('/editResume', async (req, res) => {
         });
     });
 });
-router.post('/convertToPDF', async (req, res) => {
+router.post("/convertToPDF", async (req, res) => {
+  try {
     const { latexContent } = req.body;
+    const formData = new FormData();
+    formData.append("latex", latexContent);
 
-    try {
-        // Assuming you have a function to convert LaTeX to PDF
-        
-    } catch (error) {
-        console.error('Error converting LaTeX to PDF:', error);
-        res.status(500).json({ 
-            success: false,
-            error: 'Error converting LaTeX to PDF: ' + error.message 
-        });
-    }
+    const pdfResponse = await axios.post("https://latexonline.cc/compile", formData, {
+      headers: formData.getHeaders(),
+      responseType: "arraybuffer",
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.status(200).send(pdfResponse.data);
+  } catch (error) {
+    console.error("Error converting LaTeX:", error.message);
+    res.status(500).json({ error: "Failed to convert LaTeX to PDF" });
+  }
 });
+
+
 export default router;
 

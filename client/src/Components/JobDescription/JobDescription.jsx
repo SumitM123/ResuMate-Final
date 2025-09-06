@@ -170,12 +170,14 @@ function JobDescription() {
       } else {
         console.error("Backend response missing keyWordExtraction:", serverResponse?.data);
         setErrorMessage("Server did not return keywords");
+        return;
       }
 
       navigate("/loadingPage");
     } catch (err) {
       console.error("Error in getting the keyword extraction:", err);
       setErrorMessage("Failed to fetch job keywords. Please try again.");
+      return;
     }
     //const serverResponse = await serverResponseJobDescription();
     //userInfo.setJobKeywords(serverResponse.data.keyWordExtraction);

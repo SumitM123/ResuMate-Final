@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from './mongoConnect.js';
 import authRoutes from './routes/auth.js';
 import fileParsingRoutes from './routes/fileParsingAndLogic.js';
-
+import userRoutes from './routes/createUsers.js';
 dotenv.config({ path: './config.env' });
 
 connectDB();
@@ -20,6 +20,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use('/api/auth', authRoutes);
 app.use('/loadingPage', fileParsingRoutes);
+app.use('/users', userRoutes);
 
 app.get('/', (req, res) => {
   res.send('API is running...');

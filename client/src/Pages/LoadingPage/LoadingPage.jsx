@@ -104,56 +104,48 @@ function LoadingPage() {
   * Input the edited JSON structure into the JAKE'S RESUME, and then return the new resume to the user.
 
 */
-  useEffect( () => {
-    const functionToCall = async () => {
+useEffect(() => {
+  (async () => {
+    try {
+      const resumeData = userInfo.parsedResumeData;
+      const jobDescriptionKeywords = userInfo.jobkeywords;
+
+      // Send resume + keywords to backend
+      const responseTex = await axios.post('/loadingPage/editResume', {
+        resumeData,
+        jobDescriptionKeywords
+      });
+
+      // Ask backend to convert LaTeX → PDF
       try {
-        const resumeData = userInfo.parsedResumeData;
-        const jobDescriptionKeywords = userInfo.jobkeywords;
+        const pdfResponse = await axios.post(
+          '/loadingPage/convertToPDF',
+          { latexContent: responseTex.data.data },
+          { responseType: 'blob' }
+        );
 
-        // Assuming you want to send both data to the server
-        const responseTex = await axios.post('/loadingPage/editResume', {
-          resumeData: resumeData,
-          jobDescriptionKeywords: jobDescriptionKeywords
+        const pdfBlob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+
+        navigate('/outputPage', { 
+          state: { 
+            pdfUrl,
+            latexContent: responseTex.data.data // send raw LaTeX if you want
+          } 
         });
-        
-        // Convert LaTeX to PDF using LaTeX.Online API
-        try {
-          const formData = new FormData();
-          formData.append('latex', responseTex.data);
-          
-          const pdfResponse = await axios.post('https://latexonline.cc/compile', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            responseType: 'blob' // Important: to handle PDF binary data
-          });
-
-          // Create a blob URL for the PDF
-          const pdfBlob = new Blob([pdfResponse.data], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          
-          // Navigate to output page with the PDF URL
-          navigate('/outputPage', { 
-            state: { 
-              pdfUrl: pdfUrl,
-              latexContent: responseTex.data 
-            } 
-          });
-        } catch (error) {
-          console.error('Error converting LaTeX to PDF:', error);
-          setError('Failed to convert resume to PDF. Please try again.');
-        }
-
-        console.log("Successfully generated resume");
-        // Navigate to the next page or show success message
-        // navigate('/resumePreview', { state: { data: response.data } });
       } catch (error) {
-        console.error("Error in editing resume:", error);
-        setError(error.message);
+        console.error('Error converting LaTeX to PDF:', error);
+        setError('Failed to convert resume to PDF. Please try again.');
       }
+
+      console.log("Successfully generated resume");
+    } catch (error) {
+      console.error("Error in editing resume:", error);
+      setError(error.message);
     }
-    functionToCall();
-  })
+  })();
+}, []);
+
   
 
 

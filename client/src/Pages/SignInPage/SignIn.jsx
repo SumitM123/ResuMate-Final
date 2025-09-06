@@ -17,11 +17,24 @@ function SignInPage() {
         token: credentialResponse.credential,
       });
       
+      console.log('Google login successful:', userData);
+      console.log('Google object stringified:', JSON.stringify(userData));
       // Check if userData is valid before navigating
       if (userData.data) {
         console.log('User info:', userData.data);
         // Save user data to context. You do so by accessing the value property of component through useUser() hook, and then modifying the properies of the value object
         login(userData.data);
+        try {
+          const addingUser = await axios.post('/users/addUser', userData.data, {
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          console.log('User addition response:', addingUser.data);
+        } catch (error) {
+          console.error('Error adding user:', error);
+        }
+
         navigate('/application');
       } else {
         console.error('No user data received from server');
