@@ -1,9 +1,21 @@
 import { useLocation } from 'react-router-dom';
-
+import axios from 'axios';
+import { use } from 'react';
 function OutputPage() {
   const location = useLocation();
   const pdfUrl = location.state.pdfUrl;
-
+  const now = new Date();
+  useEffect (() => {
+    if(userInfo.user) {
+      const documents = new FormData();
+      const suffixFileName = now.getDate().toString() + "+ " + now.getMonth().toString() + "+ " + now.getFullYear().toString() + "+ " + now.getHours().toString() + "+ " + now.getMinutes().toString() + "+ " + now.getSeconds().toString();
+      //const fullFileName = userInfo.user.
+      documents.append('OriginalResume', userInfo.file, );
+      documents.append('Job Description', userInfo.jobDescription);
+      // documents.app
+      // axios.post('/users/addDocuments', 
+    }
+  }, []);
   const handleDownload = () => {
     // Create a temporary anchor element
     const link = document.createElement('a');

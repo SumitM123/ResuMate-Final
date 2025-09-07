@@ -12,9 +12,9 @@ const { default: JobDescription } = require('../../client/src/Components/JobDesc
 
 // Schema for storing the actual resume file, job description, and the parsed resume
 const pastQuerySchema = new mongoose.Schema({
-    resume: Buffer,
+    resume: String, //URL to the resume file in cloud storage 
     JobDescription: String,
-    parsedResume: Buffer
+    parsedResume: Buffer //URL to the resume file in cloud storage
 });
 
 const DocumentStoring = new mongoose.Schema({
@@ -29,3 +29,5 @@ const DocumentStoring = new mongoose.Schema({
 const DocumentModel = mongoose.model('DocumentStore', DocumentStoring);
 
 export default DocumentModel;
+
+//USE EITHER PUTOBJECT OR MANAGEDUPLOAD FOR UPLOADING THE FILES TO S3
