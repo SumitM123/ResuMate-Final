@@ -2,12 +2,16 @@ import React from 'react';
 import NavBar from '../../Components/NavBar/NavBar';
 import { useNavigate } from 'react-router-dom';
 import './home.css'; // Import CSS file
-
+import { useUser }  from '../../Components/context/UserContext.js';
 function Home() {
   const navigate = useNavigate();
-
+  const userInfo = useUser();
   const goToApp = () => {
-    navigate('/application');
+    if(userInfo.user) {
+      navigate('/application');
+      return;
+    }
+    alert("Please log in  to continue.");
   };
 
   return (

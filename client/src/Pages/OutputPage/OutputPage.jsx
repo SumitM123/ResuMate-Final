@@ -1,7 +1,10 @@
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { use } from 'react';
+import { useEffect } from 'react';
+import { useUser } from '../../Components/context/UserContext.js';
 function OutputPage() {
+  const userInfo = useUser();
   const location = useLocation();
   const pdfUrl = location.state.pdfUrl;
   const now = new Date();
@@ -10,6 +13,7 @@ function OutputPage() {
       const documents = new FormData();
       const suffixFileName = now.getDate().toString() + "+ " + now.getMonth().toString() + "+ " + now.getFullYear().toString() + "+ " + now.getHours().toString() + "+ " + now.getMinutes().toString() + "+ " + now.getSeconds().toString();
       //const fullFileName = userInfo.user.
+      
       documents.append('OriginalResume', userInfo.file, );
       documents.append('Job Description', userInfo.jobDescription);
       // documents.app
