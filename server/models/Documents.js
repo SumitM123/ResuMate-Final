@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-const { default: JobDescription } = require('../../client/src/Components/JobDescription/JobDescription');
+import mongoose from 'mongoose';
 
 /*
     The general process

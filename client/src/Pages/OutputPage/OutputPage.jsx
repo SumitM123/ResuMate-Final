@@ -14,7 +14,7 @@ function OutputPage() {
       const suffixFileName = now.getDate().toString() + "+ " + now.getMonth().toString() + "+ " + now.getFullYear().toString() + "+ " + now.getHours().toString() + "+ " + now.getMinutes().toString() + "+ " + now.getSeconds().toString();
       //const fullFileName = userInfo.user.
       
-      documents.append('OriginalResume', userInfo.file, );
+      documents.append('OriginalResume', userInfo.file);
       documents.append('Job Description', userInfo.jobDescription);
       // documents.app
       // axios.post('/users/addDocuments', 
