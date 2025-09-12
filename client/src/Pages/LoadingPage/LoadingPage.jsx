@@ -104,47 +104,51 @@ function LoadingPage() {
   * Input the edited JSON structure into the JAKE'S RESUME, and then return the new resume to the user.
 
 */
-useEffect(() => {
-  (async () => {
-    try {
-      const resumeData = userInfo.parsedResumeData;
-      const jobDescriptionKeywords = userInfo.jobkeywords;
 
-      // Send resume + keywords to backend
-      const responseTex = await axios.post('/loadingPage/editResume', {
+
+//SPLIT THIS ONE BY ONE
+useEffect(
+  async () => {
+    const resumeData = userInfo.parsedResumeData;
+    const jobDescriptionKeywords = userInfo.jobkeywords;
+    let responseTex;
+    // Send resume + keywords to backend so keywords can be integrated into resume
+    try {
+      responseTex = await axios.post('/loadingPage/editResume', {
         resumeData,
         jobDescriptionKeywords
+      }, {
+        headers: {
+        'Content-Type': 'application/json', 
+        }
       });
-
-      // Ask backend to convert LaTeX → PDF
-      try {
-        const pdfResponse = await axios.post(
-          '/loadingPage/convertToPDF',
-          { latexContent: responseTex.data.data },
-          { responseType: 'blob' }
-        );
-
-        const pdfBlob = new Blob([pdfResponse.data], { type: 'application/pdf' });
-        const pdfUrl = URL.createObjectURL(pdfBlob);
-
-        navigate('/outputPage', { 
-          state: { 
-            pdfUrl,
-            latexContent: responseTex.data.data // send raw LaTeX if you want
-          } 
-        });
-      } catch (error) {
-        console.error('Error converting LaTeX to PDF:', error);
-        setError('Failed to convert resume to PDF. Please try again.');
-      }
-
-      console.log("Successfully generated resume");
     } catch (error) {
-      console.error("Error in editing resume:", error);
-      setError(error.message);
+      console.error("Error in editing integrating keywords into resume:", error);
+      return;
     }
-  })();
-}, []);
+
+    // Ask backend to convert LaTeX → PDF
+    try {
+      const pdfResponse = await axios.post(
+        '/loadingPage/convertToPDF',
+        { latexContent: responseTex.data.data },
+        { responseType: 'blob' }
+      );
+
+      const pdfBlob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+    } catch (error) {
+      console.error("Error in convert resume to PDF:", error);
+      return;
+    }
+    navigate('/outputPage', { 
+      state: { 
+        pdfUrl,
+        latexContent: responseTex.data.data // send raw LaTeX if you want
+      } 
+    });
+  }, []);
 
   
 
