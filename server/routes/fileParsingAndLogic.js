@@ -13,7 +13,7 @@ import { LLMChain } from "langchain/chains";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import FormData from "form-data";
-
+import axios from "axios";
 
 // Fix __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -314,15 +314,15 @@ router.post('/editResume', async (req, res) => {
 
 router.put('/changeToLaTeX', async (req, res) => {
   const { chainResult } = req.body;
-  const latexTemplate = await fs.readFile(path.join(__dirname, "../lib/JakeResume.tex"), "utf8");
+  const latexTemplate = await fs.readFile(path.join(__dirname, "../lib/template.tex"), "utf8");
   const message = [
     new SystemMessage({
       content: `
-            You are an expert LaTeX formatter specializing in professional resumes.
+            You are an expert LaTeX formatter specializing in professional resumes. Your job is to incorporate the JSON-structured resume data into the provided LaTeX template.
             
             You will always follow these rules:
             1. Use the provided LaTeX template exactly as given — do not alter formatting, commands, spacing, or section order.
-            2. Replace each placeholder (e.g., {{name}}, {{contact}}, {{experience}}, etc.) in the template with the corresponding value from the user's JSON.
+            2. Replace each placeholders, or tags in the template with the corresponding value from the user's JSON.
             3. If a placeholder's value is missing in the JSON, leave it empty but keep the placeholder's LaTeX structure intact.
             4. Escape special LaTeX characters in user-provided text: %, $, _, &, #, {, }.
             5. Return **only** the completed LaTeX code — no comments, no explanations, no extra formatting outside of LaTeX.
@@ -359,6 +359,8 @@ router.put('/changeToLaTeX', async (req, res) => {
 router.post("/convertToPDF", async (req, res) => {
   try {
     const { latexContent } = req.body;
+    console.log("LaTeX content being sent:", latexContent); // Debug
+
     const formData = new FormData();
     formData.append("latex", latexContent);
 
@@ -366,6 +368,8 @@ router.post("/convertToPDF", async (req, res) => {
       headers: formData.getHeaders(),
       responseType: "arraybuffer",
     });
+    //the pdfResponse.data is a buffer object that 
+    console.log("Received PDF response from LaTeX service, size:", pdfResponse.data.length); // Debug
 
     res.setHeader("Content-Type", "application/pdf");
     res.status(200).send(pdfResponse.data);

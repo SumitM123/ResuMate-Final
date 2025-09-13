@@ -127,6 +127,7 @@ useEffect(
         return;
       }
       console.log("Back to front end after chains");
+
       let latexContent;
       try {
         latexContent = await axios.put('/loadingPage/changeToLaTeX', { chainResult: responseTex.data });
@@ -134,12 +135,12 @@ useEffect(
         console.error("Error in changing to LaTeX:", error);
         return;
       }
-      userInfo.setLatexContent(preValue => latexContent.data.latexResponse);
+      userInfo.setLatexContent(prevLatexContent => latexContent.data.latexResponse);
       console.log("Back to front end before convert to PDF");
       //UNTIL HERE IS GOOD. 
 
       //Ask backend to convert LaTeX → PDF
-
+      console.log("Latex content from frontend:", userInfo.latexContent);
       try {
         const pdfResponse = await axios.post(
           '/loadingPage/convertToPDF',
