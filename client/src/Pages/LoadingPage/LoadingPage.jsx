@@ -105,49 +105,62 @@ function LoadingPage() {
 
 */
 
-
-//SPLIT THIS ONE BY ONE
+//Might have to fix this so that it's a callback that calls an async function
 useEffect(
-  async () => {
-    const resumeData = userInfo.parsedResumeData;
-    const jobDescriptionKeywords = userInfo.jobkeywords;
-    let responseTex;
-    // Send resume + keywords to backend so keywords can be integrated into resume
-    try {
-      responseTex = await axios.post('/loadingPage/editResume', {
-        resumeData,
-        jobDescriptionKeywords
-      }, {
-        headers: {
-        'Content-Type': 'application/json', 
-        }
-      });
-    } catch (error) {
-      console.error("Error in editing integrating keywords into resume:", error);
-      return;
+  () => {
+    const functionCall = async () => {
+      const resumeData = userInfo.parsedResumeData;
+      const jobDescriptionKeywords = userInfo.jobkeywords;
+      let responseTex;
+      // Send resume + keywords to backend so keywords can be integrated into resume
+      try {
+        responseTex = await axios.post('http://localhost:5000/loadingPage/editResume', {
+          resumeData,
+          jobDescriptionKeywords
+        }, {
+          headers: {
+          'Content-Type': 'application/json', 
+          }
+        });
+      } catch (error) {
+        console.error("Error in editing integrating keywords into resume:", error);
+        return;
+      }
+      console.log("Back to front end after chains");
+      let latexContent;
+      try {
+        latexContent = await axios.put('/loadingPage/changeToLaTeX', { chainResult: responseTex.data });
+      } catch (error) {
+        console.error("Error in changing to LaTeX:", error);
+        return;
+      }
+      userInfo.setLatexContent(preValue => latexContent.data.latexResponse);
+      console.log("Back to front end before convert to PDF");
+      //UNTIL HERE IS GOOD. 
+
+      //Ask backend to convert LaTeX → PDF
+
+      try {
+        const pdfResponse = await axios.post(
+          '/loadingPage/convertToPDF',
+          { latexContent: userInfo.latexContent },
+          { responseType: 'blob' }
+        );
+        console.log("Successfully converted to PDF");
+        const pdfBlob = new Blob([pdfResponse.data], { type: 'application/pdf' });
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        navigate('/outputPage', { 
+          state: { 
+            pdfUrl,
+            latexContent: userInfo.latexContent// send raw LaTeX if you want
+          } 
+        });
+      } catch (error) {
+        console.error("Error in convert resume to PDF:", error);
+        return;
+      }
     }
-
-    // Ask backend to convert LaTeX → PDF
-    try {
-      const pdfResponse = await axios.post(
-        '/loadingPage/convertToPDF',
-        { latexContent: responseTex.data.data },
-        { responseType: 'blob' }
-      );
-
-      const pdfBlob = new Blob([pdfResponse.data], { type: 'application/pdf' });
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-
-    } catch (error) {
-      console.error("Error in convert resume to PDF:", error);
-      return;
-    }
-    navigate('/outputPage', { 
-      state: { 
-        pdfUrl,
-        latexContent: responseTex.data.data // send raw LaTeX if you want
-      } 
-    });
+    functionCall();
   }, []);
 
   

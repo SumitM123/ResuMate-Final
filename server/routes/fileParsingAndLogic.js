@@ -188,7 +188,7 @@ router.post('/JobDescriptionKeyWord', async (req, res) => {
             5. Education/Certifications (degrees, certificates, qualifications)
             6. Job Functions (responsibilities, actions, duties)
 
-            Focus on extracting specific, actionable keywords that would be found on a resume. Avoid generic terms.`
+            Focus on extracting specific, actionable keywords that would be found on a resume. Avoid generic terms. ENSURE THAT THE OUTPUT IS IN JSON FORMAT. `
             })
         ];
 
@@ -280,66 +280,82 @@ router.post('/editResume', async (req, res) => {
         })
     ];
 
+    console.log("Before the prompt chains");
     const prompt1 = ChatPromptTemplate.fromMessages(message1);
     const prompt2 = ChatPromptTemplate.fromMessages(message2);
     
-    //This is of type string
-    const chain = new RunnableSequence({
-        first: new LLMChain({ llm: googleGemini, prompt: prompt1 }),
-        second: new LLMChain({ llm: gorq, prompt: prompt2 }),
-        verbose: true
-    });
-    const chainResult = await chain.invoke({resumeData, jobDescriptionKeywords});
-    /*
-        I provide it the Jake's resume format, and I'll tell the LLM to implement the edited JSON structure into the 
-        resume format. Then save that as a .tex file. Then use an external API to convert that .tex file into a 
-        pdf and output it to the user. 
+    const chain1 = prompt1.pipe(googleGemini);
+    const chain2 = prompt2.pipe(gorq);
 
-
-    */ 
-    //can't just upload a file. Have to encode the file and pass into system message
-    console.log("Finished the runnable sequence");
-    console.log("The final chain result of the JSON structured resume after editing and before turning it into LaTeX: " + chain); 
-    const latexTemplate = await fs.readFile(path.join(__dirname, "../lib/JakeResume.tex"), "utf8");
-
-    const message3 = [
-        new SystemMessage({
-          content: `
-                You are an expert LaTeX formatter specializing in professional resumes.
-                
-                You will always follow these rules:
-                1. Use the provided LaTeX template exactly as given — do not alter formatting, commands, spacing, or section order.
-                2. Replace each placeholder (e.g., {{name}}, {{contact}}, {{experience}}, etc.) in the template with the corresponding value from the user's JSON.
-                3. If a placeholder's value is missing in the JSON, leave it empty but keep the placeholder's LaTeX structure intact.
-                4. Escape special LaTeX characters in user-provided text: %, $, _, &, #, {, }.
-                5. Return **only** the completed LaTeX code — no comments, no explanations, no extra formatting outside of LaTeX.
-                6. ENSURE THE FINAL LaTeX COMPILES WITHOUT ERRORS. THIS IS ESSENTIAL.
-                
-                TEMPLATE START:
-                ${latexTemplate}
-                TEMPLATE END
-                    `
-        }),
-        new HumanMessage({
-            content: `
-                This is the JSON-structured resume to populate into the LaTeX template: ${chainResult}
-            `
-        })
-    ];
-    openAI.invoke(message3).then((latexResponse) => {
-        res.status(200).json({
-            success: true,
-            message: 'Resume formatted successfully',
-            data: latexResponse.content
-        });
-    }).catch((error) => {
-        console.error('Error formatting LaTeX resume:', error);
-        res.status(500).json({ 
-            success: false,
-            error: 'Error processing request: ' + error.message 
-        });
-    });
+    const fullChain = RunnableSequence.from([
+      chain1,
+      (outputFromFirst) => ({ text: outputFromFirst.content }), 
+      chain2,
+    ]);
+    let chainResult = "";
+    try {
+      console.log("Before invoking the full chain");
+      chainResult = await fullChain.invoke({ resumeData, jobDescriptionKeywords });
+      console.log("After invoking the full chain");
+      res.status(200).json({
+        success: true,
+        message: 'Resume edited successfully',
+        data: chainResult.content
+      });
+    } catch (error) {
+      console.error('Error processing request:', error);
+      res.status(500).json({ 
+          success: false,
+          error: 'Error processing request: ' + error.message
+      });
+      return;
+    }
 });
+
+router.put('/changeToLaTeX', async (req, res) => {
+  const { chainResult } = req.body;
+  const latexTemplate = await fs.readFile(path.join(__dirname, "../lib/JakeResume.tex"), "utf8");
+  const message = [
+    new SystemMessage({
+      content: `
+            You are an expert LaTeX formatter specializing in professional resumes.
+            
+            You will always follow these rules:
+            1. Use the provided LaTeX template exactly as given — do not alter formatting, commands, spacing, or section order.
+            2. Replace each placeholder (e.g., {{name}}, {{contact}}, {{experience}}, etc.) in the template with the corresponding value from the user's JSON.
+            3. If a placeholder's value is missing in the JSON, leave it empty but keep the placeholder's LaTeX structure intact.
+            4. Escape special LaTeX characters in user-provided text: %, $, _, &, #, {, }.
+            5. Return **only** the completed LaTeX code — no comments, no explanations, no extra formatting outside of LaTeX.
+            6. ENSURE THE FINAL LaTeX COMPILES WITHOUT ERRORS. THIS IS ESSENTIAL.
+            
+            TEMPLATE START:
+            ${latexTemplate}
+            TEMPLATE END
+                `
+    }),
+    new HumanMessage({
+        content: `
+            This is the JSON-structured resume to populate into the LaTeX template: ${chainResult}
+        `
+    })
+  ];
+  let latexResponse = "";
+  try {
+    latexResponse = await openAI.invoke(message);
+    res.status(200).json({
+        success: true,
+        message: 'Resume formatted successfully',
+        latexResponse: latexResponse.content
+    });
+  } catch (error) {
+    console.error('Error formatting LaTeX resume:', error);
+      res.status(500).json({ 
+          success: false,
+          error: 'Error processing request: ' + error.message 
+      });
+  }
+});
+
 router.post("/convertToPDF", async (req, res) => {
   try {
     const { latexContent } = req.body;
