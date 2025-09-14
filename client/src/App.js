@@ -31,7 +31,7 @@ function App() {
         <Route path="/signIn" element={<SignIn />} />
         <Route path='/application' element={<FilesSend/>}/>
         <Route path='/loadingPage' element={<LoadingPage/>}/>
-        <Route path='/output' element={<OutputPage/>}/>
+        <Route path='/outputPage' element={<OutputPage/>}/>
         {/* <Route path="/application" element={<SignIn/>}/> */}
       </Routes>
     </UserProvider>

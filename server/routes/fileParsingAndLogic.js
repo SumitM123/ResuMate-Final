@@ -330,10 +330,12 @@ router.put('/changeToLaTeX', async (req, res) => {
               6. ENSURE THE FINAL LaTeX COMPILES WITHOUT ERRORS. THIS IS ESSENTIAL.
 
                **IMPORTANT:** Do NOT include any code block markers such as triple backticks, 'latex', or any markdown formatting. For example, do NOT return:
-                [code block]
+                [code block] 
                 \\documentclass{...}
                 ...
                 [end code block]
+
+                DON'T HAVE LATEX CODE BLOCK MARKERS. JUST PURE CODE. 
                 Instead, return only the raw LaTeX code.
                 TEMPLATE START:
                   ${latexTemplate}
@@ -349,6 +351,12 @@ router.put('/changeToLaTeX', async (req, res) => {
   let latexResponse = "";
   try {
     latexResponse = await googleGemini.invoke(message);
+    // let firstChar = latexResponse.content.indexOf('%');
+    // if(firstChar > 0) {
+    //   latexResponse.content = latexResponse.content.slice(firstChar);
+    //   latexResponse.content = latexResponse.content.substr(0, latexResponse.content.length - 3);
+    // }
+    latexResponse.content = latexResponse.content.replace(/```latex|```/g, '');
     console.log("LaTeX resume formatted backend:", latexResponse.content);
     res.status(200).json({
         success: true,

@@ -17,7 +17,7 @@
 \usepackage{fancyhdr}
 \usepackage[english]{babel}
 \usepackage{tabularx}
-% \usepackage{fontawesome5} % Removed for standard fonts
+% \usepackage{fontawesome5} % Removed for Windows compatibility
 \usepackage{multicol}
 \setlength{\multicolsep}{-3.0pt}
 \setlength{\columnsep}{-1pt}
@@ -73,30 +73,31 @@
 
 %----------HEADING----------
 \begin{center}
-    {\Huge \scshape } \\[1pt]
-    \small Phone ~ Email ~ LinkedIn ~ Github
+    {\Huge \scshape Sumit Mantri} \\[1pt]
+    Mountain House, CA \\[1pt]
+    \small 669-268-7993 ~ smantri@ucdavis.edu ~  ~ 
 \end{center}
 
 %-----------EDUCATION-----------
 \section{Education}
 \resumeSubHeadingListStart
   \resumeSubheading
-    {}{}{}
-    {}{}
+    {University of California, Davis}{May 2025}
+    {Computer Science and Statistics, Machine Learning Track}{}
 \resumeSubHeadingListEnd
 
 %------RELEVANT COURSEWORK-------
 \section{Relevant Coursework}
 \begin{multicols}{4}
     \begin{itemize}[itemsep=-5pt, parsep=3pt]
-        \item 
-        \item 
-        \item 
-        \item 
-        \item 
-        \item 
-        \item 
-        \item 
+        \item Course 1
+        \item Course 2
+        \item Course 3
+        \item Course 4
+        \item Course 5
+        \item Course 6
+        \item Course 7
+        \item Course 8
     \end{itemize}
 \end{multicols}
 
@@ -104,10 +105,36 @@
 \section{Experience}
 \resumeSubHeadingListStart
   \resumeSubheading
-    {}{}{}
-    {}{}
+    {UC Davis Research - Dr. Tagkopoulos Lab}{May 2025 -- Present}
+    {Researcher}{}
     \resumeItemListStart
-        \resumeItem{}
+        \resumeItem{Accomplished the implementation of classification models for peptides by utilizing transformers, 1D Convolution, and other RNN layers for sequences of data, resulting in enhanced model accuracy}
+        \resumeItem{Gained in-depth understanding of the D3PM model implementation and fine-tuning of the model, resulting in the creation of synthetic sequences that can be tested in real-world scenarios}
+    \resumeItemListEnd
+  \resumeSubheading
+    {Artificial Intelligence Student Collective}{October 2024 -- Present}
+    {SWE in Object Detection}{}
+    \resumeItemListStart
+        \resumeItem{Improved data collection efficiency by 30\% by utilizing Web-Scraping to gather data for the test set via Selenium and Chrome Web Driver, resulting in a more comprehensive dataset}
+        \resumeItem{Enhanced user experience by 25\% by using the You Only Look Once (YOLO) model through the TensorFlow framework to provide live haptic feedback to the user, resulting in more accurate object detection}
+        \resumeItem{Increased user customization by 40\% by implementing customizable volume output based on the proximity of objects in focus, resulting in a more personalized experience}
+    \resumeItemListEnd
+  \resumeSubheading
+    {Deep Learning.AI}{June 2024 -- October 2024}
+    {Student}{}
+    \resumeItemListStart
+        \resumeItem{Acquired in-depth knowledge of supervised learning techniques, resulting in a 90\% understanding of key concepts}
+        \resumeItem{Developed and optimized neural network architectures, including Convolutional Neural Networks (CNNs), Recurrent Neural Networks (RNNs), LSTMs, and Transformers Network, resulting in a 20\% improvement in model performance}
+        \resumeItem{Enhanced model performance by 15\% using techniques such as Dropout, Batch Normalization, and Xavier/He initialization, resulting in more accurate predictions}
+        \resumeItem{Gained expertise in theoretical concepts and applied them to real-world problems in Python and TensorFlow, with practical experience in speech recognition, music synthesis, chatbots, machine translation, and Natural Language Processing (NLP), resulting in a 95\% completion rate of projects}
+    \resumeItemListEnd
+  \resumeSubheading
+    {Cisco}{June 2022 -- July 2022}
+    {Programmer/Marketer (Job Shadow)}{}
+    \resumeItemListStart
+        \resumeItem{Expanded industry knowledge and professional network by 50\% through engagement with Cisco employees, and gained valuable insights into the company's organizational structure, resulting in a 25\% increase in industry connections}
+        \resumeItem{Developed a marketing strategy during a hackathon, conducting surveys with Cisco employees on mental health to inform solution implementation, resulting in a 30\% increase in employee engagement}
+        \resumeItem{Served as programming lead for the hackathon team alongside a colleague, developing a personalized mental health Webex chatbot named Carely to address user needs using Javascript and Express, resulting in a 90\% user satisfaction rate}
     \resumeItemListEnd
 \resumeSubHeadingListEnd
 
@@ -115,9 +142,19 @@
 \section{Projects}
 \resumeSubHeadingListStart
   \resumeProjectHeading
-      { | \emph{}}{}
+      {Image Segmentation | \emph{TensorFlow, Keras, U-Net}}{June 2024 -- July 2024}
       \resumeItemListStart
-        \resumeItem{}
+        \resumeItem{Built a U-Net convolutional neural network in TensorFlow/Keras for semantic image segmentation on a self-driving car dataset, achieving a 90\% accuracy rate}
+        \resumeItem{Preprocessed image and mask data using tf.data pipelines and custom augmentation functions to prepare inputs for training, resulting in a 20\% reduction in training time}
+        \resumeItem{Designed and tested modular U-Net blocks (convolution, pooling, upsampling) to ensure correct architecture using model summaries, resulting in a 15\% improvement in model performance}
+      \resumeItemListEnd
+  \resumeProjectHeading
+      {Chronic Kidney Disease Detection | \emph{scikit-learn, XGBoost, Random Forest}}{March 2025 -- April 2025}
+      \resumeItemListStart
+        \resumeItem{Built machine learning models to classify Chronic Kidney Disease stages using patient lab data, resulting in a 98\% accuracy rate}
+        \resumeItem{Preprocessed features with imputation, scaling, and one-hot encoding through scikit-learn pipelines, resulting in a 25\% reduction in data preprocessing time}
+        \resumeItem{Performed detailed error analysis by comparing training and validation performance to identify underfitting and overfitting, and adjusted model complexity and tuned hyperparameters using GridSearchCV and RandomizedSearchCV to improve generalization, resulting in a 20\% improvement in model performance}
+        \resumeItem{Boosted test accuracy from \textasciitilde61\% with logistic regression to \textasciitilde75\% with Random Forest, and lastly \textasciitilde98\% accuracy with XGBoost, verified through StratifiedKFold learning curves, resulting in a 37\% increase in model accuracy}
       \resumeItemListEnd
 \resumeSubHeadingListEnd
 
@@ -125,9 +162,9 @@
 \section{Technical Skills}
 \begin{itemize}[leftmargin=0.15in, label={}]
     \small{\item{
-     \textbf{Languages}{: } \\
-     \textbf{Developer Tools}{: } \\
-     \textbf{Technologies/Frameworks}{: } \\
+     \textbf{Languages}{: Python 3, C++, Java, R, MATLAB, HTML, CSS, Javascript} \\
+     \textbf{Developer Tools}{: Visual Studio Code, R Studio, Jupyter, Git, GitHub, Compass, Selenium} \\
+     \textbf{Technologies/Frameworks}{: Node.JS, MongoDB, TensorFlow, Keras, NumPy, Pandas, scikit-learn, React, Express, Transformers, Convolutional Neural Networks (CNNs), Recurrent Neural Networks (RNNs), LSTMs, YOLO, U-Net, XGBoost, Random Forest, Logistic Regression, Natural Language Processing (NLP), GridSearchCV, RandomizedSearchCV, StratifiedKFold, Dropout, Batch Normalization} \\
     }}
 \end{itemize}
 
@@ -135,9 +172,11 @@
 \section{Leadership / Extracurricular}
 \resumeSubHeadingListStart
   \resumeSubheading
-    {}{}{}{}
+    {Organization / Club}{Start Date -- End Date}
+    {Position / Role}{Affiliation}
     \resumeItemListStart
-        \resumeItem{}
+        \resumeItem{Responsibility / Achievement 1}
+        \resumeItem{Responsibility / Achievement 2}
     \resumeItemListEnd
 \resumeSubHeadingListEnd
 
