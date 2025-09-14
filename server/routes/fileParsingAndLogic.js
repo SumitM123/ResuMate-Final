@@ -350,7 +350,7 @@ router.put('/changeToLaTeX', async (req, res) => {
   ];
   let latexResponse = "";
   try {
-    latexResponse = await googleGemini.invoke(message);
+    latexResponse = await openAI.invoke(message);
     // let firstChar = latexResponse.content.indexOf('%');
     // if(firstChar > 0) {
     //   latexResponse.content = latexResponse.content.slice(firstChar);
@@ -401,7 +401,7 @@ router.post("/convertToPDF", async (req, res) => {
 
     // Compile using tectonic
     const pdfBuffer = await new Promise((resolve, reject) => {
-      const proc = spawn("tectonic", [tempFile, "--outdir=.", "--keep-logs"], {
+      const proc = spawn("tectonic", [tempFile, "--outdir=../lib", "--keep-logs"], {
         stdio: "inherit",
       });
 
