@@ -17,7 +17,7 @@
 \usepackage{fancyhdr}
 \usepackage[english]{babel}
 \usepackage{tabularx}
-\usepackage{fontawesome5}
+% \usepackage{fontawesome5} % Removed for Windows compatibility
 \usepackage{multicol}
 \setlength{\multicolsep}{-3.0pt}
 \setlength{\columnsep}{-1pt}
@@ -73,12 +73,9 @@
 
 %----------HEADING----------
 \begin{center}
-    {\Huge \scshape First Last} \\ \vspace{1pt}
-    Street Address, City, State ZIP \\ \vspace{1pt}
-    \small \raisebox{-0.1\height}\faPhone\ Phone Number ~ 
-    \href{mailto:email@example.com}{\raisebox{-0.2\height}\faEnvelope\ email@example.com} ~
-    \href{https://linkedin.com/in/username}{\raisebox{-0.2\height}\faLinkedin\ linkedin.com/in/username} ~
-    \href{https://github.com/username}{\raisebox{-0.2\height}\faGithub\ github.com/username}
+    {\Huge \scshape First Last} \\[1pt]
+    Street Address, City, State ZIP \\[1pt]
+    \small Phone Number ~ Email ~ LinkedIn ~ Github
 \end{center}
 
 %-----------EDUCATION-----------
