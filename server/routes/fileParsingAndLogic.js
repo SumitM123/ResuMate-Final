@@ -14,6 +14,7 @@ import { RunnableSequence } from "@langchain/core/runnables";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import FormData from "form-data";
 import axios from "axios";
+import { spawn } from "child_process";
 
 // Fix __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -341,7 +342,8 @@ router.put('/changeToLaTeX', async (req, res) => {
   ];
   let latexResponse = "";
   try {
-    latexResponse = await openAI.invoke(message);
+    latexResponse = await googleGemini.invoke(message);
+    console.log("LaTeX resume formatted backend:", latexResponse.content);
     res.status(200).json({
         success: true,
         message: 'Resume formatted successfully',
@@ -357,28 +359,67 @@ router.put('/changeToLaTeX', async (req, res) => {
 });
 
 router.post("/convertToPDF", async (req, res) => {
+  // try {
+  //   const { latexContent } = req.body;
+  //   console.log("LaTeX content being sent:", latexContent); // Debug
+
+  //   const formData = new FormData();
+  //   formData.append("latex", latexContent);
+
+  //   const pdfResponse = await axios.post("https://latexonline.cc/compile", formData, {
+  //     headers: formData.getHeaders(),
+  //     responseType: "arraybuffer",
+  //   });
+  //   //the pdfResponse.data is a buffer object that 
+  //   console.log("Received PDF response from LaTeX service, size:", pdfResponse.data.length); // Debug
+
+  //   res.setHeader("Content-Type", "application/pdf");
+  //   res.status(200).send(pdfResponse.data);
+  // } catch (error) {
+  //   console.error("Error converting LaTeX:", error.message);
+  //   res.status(500).json({ error: "Failed to convert LaTeX to PDF" });
+  // }
+  const { latexContent } = req.body;
   try {
-    const { latexContent } = req.body;
-    console.log("LaTeX content being sent:", latexContent); // Debug
+    // Save LaTeX code to a temp .tex file
+    const tempFile = path.join(__dirname, "../lib/temp.tex");
+    await fs.writeFile(tempFile, latexContent);
 
-    const formData = new FormData();
-    formData.append("latex", latexContent);
+    // Compile using tectonic
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      const proc = spawn("tectonic", [tempFile, "--outdir=.", "--keep-logs"], {
+        stdio: "inherit",
+      });
 
-    const pdfResponse = await axios.post("https://latexonline.cc/compile", formData, {
-      headers: formData.getHeaders(),
-      responseType: "arraybuffer",
+      proc.on("close", async (code) => {
+        if (code === 0) {
+          try {
+            const buffer = await fs.readFile("temp.pdf");
+            resolve(buffer);
+          } catch (err) {
+            reject(err);
+          }
+        } else {
+          reject(new Error(`LaTeX compile failed with code ${code}`));
+        }
+      });
     });
-    //the pdfResponse.data is a buffer object that 
-    console.log("Received PDF response from LaTeX service, size:", pdfResponse.data.length); // Debug
 
+    // Send back PDF buffer
     res.setHeader("Content-Type", "application/pdf");
-    res.status(200).send(pdfResponse.data);
+    res.setHeader("Content-Disposition", "inline; filename=output.pdf");
+    res.status(200).send(pdfBuffer);
+
   } catch (error) {
-    console.error("Error converting LaTeX:", error.message);
+    console.error("Error converting LaTeX:", error);
     res.status(500).json({ error: "Failed to convert LaTeX to PDF" });
+  } finally {
+    try {
+      await fs.unlink(tempFile);
+      await fs.unlink("temp.pdf");
+    } catch (_) {}
   }
 });
-
 
 export default router;
 

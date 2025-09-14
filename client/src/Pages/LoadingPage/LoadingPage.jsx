@@ -130,21 +130,23 @@ useEffect(
 
       let latexContent;
       try {
-        latexContent = await axios.put('/loadingPage/changeToLaTeX', { chainResult: responseTex.data });
+        // Pass only the resume string to the LaTeX conversion endpoint
+        latexContent = await axios.put('/loadingPage/changeToLaTeX', { chainResult: responseTex.data.data });
       } catch (error) {
         console.error("Error in changing to LaTeX:", error);
         return;
       }
-      userInfo.setLatexContent(prevLatexContent => latexContent.data.latexResponse);
+      // Set the LaTeX content directly
+      userInfo.setLatexContent(prevState => latexContent.data.latexResponse);
       console.log("Back to front end before convert to PDF");
       //UNTIL HERE IS GOOD. 
-
+      console.log("Latex content from server response in frontend:", latexContent.data.latexResponse);
       //Ask backend to convert LaTeX → PDF
-      console.log("Latex content from frontend:", userInfo.latexContent);
+      console.log("Latex content of context from frontend:", userInfo.latexContent);
       try {
         const pdfResponse = await axios.post(
           '/loadingPage/convertToPDF',
-          { latexContent: userInfo.latexContent },
+          { latexContent: latexContent.data.latexResponse},
           { responseType: 'blob' }
         );
         console.log("Successfully converted to PDF");
