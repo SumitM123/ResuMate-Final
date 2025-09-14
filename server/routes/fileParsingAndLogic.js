@@ -320,19 +320,25 @@ router.put('/changeToLaTeX', async (req, res) => {
     new SystemMessage({
       content: `
             You are an expert LaTeX formatter specializing in professional resumes. Your job is to incorporate the JSON-structured resume data into the provided LaTeX template.
-            
-            You will always follow these rules:
-            1. Use the provided LaTeX template exactly as given — do not alter formatting, commands, spacing, or section order.
-            2. Replace each placeholders, or tags in the template with the corresponding value from the user's JSON.
-            3. If a placeholder's value is missing in the JSON, leave it empty but keep the placeholder's LaTeX structure intact.
-            4. Escape special LaTeX characters in user-provided text: %, $, _, &, #, {, }.
-            5. Return **only** the completed LaTeX code — no comments, no explanations, no extra formatting outside of LaTeX.
-            6. ENSURE THE FINAL LaTeX COMPILES WITHOUT ERRORS. THIS IS ESSENTIAL.
-            
-            TEMPLATE START:
-            ${latexTemplate}
-            TEMPLATE END
-                `
+
+              You will always follow these rules:
+              1. Use the provided LaTeX template exactly as given — do not alter formatting, commands, spacing, or section order.
+              2. Replace each placeholder or tag in the template with the corresponding value from the user's JSON.
+              3. If a placeholder's value is missing in the JSON, leave it empty but keep the placeholder's LaTeX structure intact.
+              4. Escape special LaTeX characters in user-provided text: %, $, _, &, #, {, }.
+              5. Return **only** the completed LaTeX code — no comments, no explanations, no extra formatting outside of LaTeX.
+              6. ENSURE THE FINAL LaTeX COMPILES WITHOUT ERRORS. THIS IS ESSENTIAL.
+
+               **IMPORTANT:** Do NOT include any code block markers such as triple backticks, 'latex', or any markdown formatting. For example, do NOT return:
+                [code block]
+                \\documentclass{...}
+                ...
+                [end code block]
+                Instead, return only the raw LaTeX code.
+                TEMPLATE START:
+                  ${latexTemplate}
+                TEMPLATE END
+            `
     }),
     new HumanMessage({
         content: `
