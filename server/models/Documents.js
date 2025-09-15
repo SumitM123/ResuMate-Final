@@ -11,9 +11,9 @@ import mongoose from 'mongoose';
 
 // Schema for storing the actual resume file, job description, and the parsed resume
 const pastQuerySchema = new mongoose.Schema({
-    resume: String, //URL to the resume file in cloud storage 
+    resume: String, //Key of the resume file in cloud storage
     JobDescription: String,
-    parsedResume: Buffer //URL to the resume file in cloud storage
+    parsedResume: String //Key of the parsed resume file in cloud storage
 });
 
 const DocumentStoring = new mongoose.Schema({
