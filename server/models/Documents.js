@@ -27,6 +27,7 @@ const DocumentStoring = new mongoose.Schema({
 
 const DocumentModel = mongoose.model('DocumentStore', DocumentStoring);
 
+
 export default DocumentModel;
 
 //USE EITHER PUTOBJECT OR MANAGEDUPLOAD FOR UPLOADING THE FILES TO S3

@@ -113,6 +113,12 @@ router.post(
       console.error("Error parsing uploading resume:", err);
       res.status(500).json({ success: false, error: err.message });
     }
+    fs.unlink(path.join(uploadDir, req.file.filename), (err) => {
+      if (err) {
+        console.error("Error deleting uploaded file:", err);
+        return;
+      }
+    });
   }
 );
 
