@@ -16,12 +16,14 @@ function OutputPage() {
     link.click();
     document.body.removeChild(link);
   };
+
   useEffect(() => {
     //I would want to create a request in which it takes the pdf and the job description sent by the user and store it inside the database
     const filesToServer = new FormData();
     filesToServer.append("originalResume", userInfo.file);
     filesToServer.append("jobDescription", userInfo.jobDescription);
     filesToServer.append("parsedResumeURL", pdfUrl); // This is a link to the pdf file
+    filesToServer.append("googleID", userInfo.user.googleID);
     /*
       This will download the file from the link, get the the original file and download it locally. Then both files will be sent to the s3 bucket
       and we'll get the URL of the files and store it inside the mongoDB 

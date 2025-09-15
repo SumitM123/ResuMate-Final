@@ -16,6 +16,9 @@ const pastQuerySchema = new mongoose.Schema({
     parsedResume: String //Key of the parsed resume file in cloud storage
 });
 
+//this model will store all the documents for Queries
+const PastQueryModel = mongoose.model('PastQueryModel', pastQuerySchema);
+
 const DocumentStoring = new mongoose.Schema({
     userId: {
         type: String,
@@ -25,9 +28,9 @@ const DocumentStoring = new mongoose.Schema({
     pastQueries: [pastQuerySchema]
 });
 
-const DocumentModel = mongoose.model('DocumentStore', DocumentStoring);
+const DocumentModel = mongoose.model('DocumentModel', DocumentStoring);
 
 
-export default DocumentModel;
+export default {DocumentModel, PastQueryModel};
 
 //USE EITHER PUTOBJECT OR MANAGEDUPLOAD FOR UPLOADING THE FILES TO S3

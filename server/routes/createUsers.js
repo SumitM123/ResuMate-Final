@@ -2,7 +2,7 @@
 import User from '../models/User.js'; // Adjust path as needed
 import mongoose from 'mongoose';
 import express from 'express';
-import DocumentModel from '../models/Documents.js';
+import {DocumentModel, PastQueryModel} from '../models/Documents.js';
 import {S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand, BucketAlreadyExists, CreateBucketCommand, waitUntilBucketExists} from '@aws-sdk/client-s3';
 
 const s3Client = new S3Client({
@@ -47,52 +47,31 @@ const upload = multer({ storage: storage });
 router.post('/uploadFiles', 
     upload.single('originalResume'), 
     async (req, res) => {
-        const { jobDescription, parsedResumeURL } = req.body;
+        const { googleID, jobDescription, parsedResumeURL } = req.body;
 
         //let outputResumeFile;
         let uniqueKeyPrefix;
         axios.get(parsedResumeURL, { responseType: 'arraybuffer' })
         .then(response => {
             uniqueKeyPrefix = Date.now() + '-';
-            parsedResumeFileName = "parsedOutputResume.pdf";
-            const filePath = path.join(__dirname, '../uploads/Cloud', parsedResumeFileName);
+            const filePath = path.join(__dirname, '../uploads/Cloud', "parsedOutputResume.pdf");
             fs.writeFileSync(filePath, response.data); // Save PDF to disk <- MIGHT HAVE TO BE ASYNC
         }).catch(error => {
             console.error("Error fetching parsed resume PDF:", error);
             return res.status(500).json({ success: false, message: 'Error fetching parsed resume PDF' });
         });
 
-        //create buckets
-
-        //original resume
-        // try {
-        //     await createBucket('resumate-documents-storage-cloud-original-resume');
-        // } catch (err) {
-            
-        //     console.error("Error creating original resume bucket :", err);
-        //     return res.status(500).json({ success: false, message: 'Error creating S3 bucket' });
-        // }
-        //output parsed resume
-
-        // try {
-        //     await createBucket('resumate-documents-storage-cloud-output-parsed-resume');
-        // } catch (err) {
-        //     console.error("Error creating parsed resume bucket :", err);
-        //     return res.status(500).json({ success: false, message: 'Error creating S3 bucket' });
-        // }
-
-       //upload files to s3
-        //path to the original resume: req.file.path (../uploads/Cloud/originalResume.pdf)
-        //path to the parsed resume: (../uploads/Cloud/{parsedResumeFileName})
         const pathToOriginalResume = path.join(__dirname, '../uploads/Cloud', 'originalResume.pdf');
-        const pathToParsedResume = path.join(__dirname, '../uploads/Cloud', parsedResumeFileName);
+        const pathToParsedResume = path.join(__dirname, '../uploads/Cloud', "parsedOutputResume.pdf");
+
+        const resumeKey = uniqueKeyPrefix + 'originalResume.pdf';
+        const parsedResumeKey = uniqueKeyPrefix + "parsedOutputResume.pdf";
         try {
             const sendingOriginalFile = await s3Client.send(new PutObjectCommand({
                 Bucket: 'resumate-documents-storage-cloud-original-resume',
-                Key: uniqueKeyPrefix + 'originalResume.pdf',
+                Key: resumeKey,
                 Body: await readFile(pathToOriginalResume)
             }));
-            //unlink the file after upload <- DO THIS
         } catch (err) {
             console.error("Error uploading original resume to S3:", err);
             return res.status(500).json({ success: false, message: 'Error uploading original resume to S3' });
@@ -100,18 +79,41 @@ router.post('/uploadFiles',
         try {
             const sendingParsedFile = await s3Client.send(new PutObjectCommand({
                 Bucket: 'resumate-documents-storage-cloud-output-parsed-resume',
-                Key: uniqueKeyPrefix + "parsedOutputResume.pdf",
+                Key: parsedResumeKey,
                 Body: await readFile(pathToParsedResume)
             }));
-            //unlink the file after upload <- DO THIS
         } catch (err) {
             console.error("Error uploading parsed resume to S3:", err);
             return res.status(500).json({ success: false, message: 'Error uploading parsed resume to S3' });
         }
         
+        fs.unlink(pathToOriginalResume, (err) => {
+            if (err) {
+                console.error("Error deleting original resume file:", err);
+            }
+        });
+        fs.unlink(pathToParsedResume, (err) => {
+            if (err) {
+                console.error("Error deleting parsed resume file:", err);
+            }
+        });
+
         //URL of the object: https://<bucket-name>.s3.<region>.amazonaws.com/<object-key> <- Not doing this approach cause then we have to make it public
-        
-        
+
+        //save the keys to mongodb
+        /* 
+            1) Create a document of the past query
+            2) Insert into the rightful Document
+        */
+       try {
+           const userToUpload = await DocumentModel.find({ googleID: googleID });
+            await userToUpload.push({resume: resumeKey, JobDescription: jobDescription, parsedResume: parsedResumeKey});
+            await DocumentModel.save();
+       } catch (err) {
+            console.error("Error saving document to MongoDB:", err);
+            return res.status(500).json({ success: false, message: 'Error saving document to MongoDB' });
+       }
+       return res.status(200).json({ success: true, message: 'Files uploaded and document saved successfully' });
 });
 
 const createBucket = async (bucketName) => {

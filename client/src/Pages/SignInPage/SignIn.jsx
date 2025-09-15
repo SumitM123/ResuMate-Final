@@ -23,7 +23,11 @@ function SignInPage() {
       if (userData.data) {
         console.log('User info:', userData.data);
         // Save user data to context. You do so by accessing the value property of component through useUser() hook, and then modifying the properies of the value object
+        
+        // will contain the properties
         login(userData.data);
+
+        //Add User to the database
         try {
           const addingUser = await axios.post('/users/addUser', userData.data, {
             headers: {
