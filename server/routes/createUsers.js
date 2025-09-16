@@ -114,27 +114,35 @@ router.post('/uploadFiles',
             1) Create a document of the past query
             2) Insert into the rightful Document
         */
-       try {
+
+        //checking if user exists inside of the user collection
+        if(!(await checkIfUserExists(googleID))) {
+            return res.status(400).json({ success: false, message: 'User does not exist' });
+        }
+
+        try {
            //when returning a promise, it means either resolving or rejecting
            const document = await DocumentModel.findOne({ googleID: googleID });
            if (document) {
                 document.pastQueries.push({resume: resumeKey, JobDescription: jobDescription, parsedResume: parsedResumeKey});
                 await document.save();
            } else {
+                //might have to delete this else statement because we're creating the document model to new user through getAllDocuments route <- DO THIS LATER
+                //instead, might have to throw an error
                 const newDoc = new DocumentModel({
                     googleID: googleID,
                     pastQueries: [{
-                    resume: resumeKey,
-                    JobDescription: jobDescription,
-                    parsedResume: parsedResumeKey
+                        resume: resumeKey,
+                        JobDescription: jobDescription,
+                        parsedResume: parsedResumeKey
                     }]
                 });
                 await newDoc.save();
            }
-       } catch (err) {
+        } catch (err) {
             console.error("Error saving document to MongoDB:", err);
             return res.status(500).json({ success: false, message: 'Error saving document to MongoDB' });
-       }
+        }
 
        fs.unlink(pathToOriginalResume, (err) => {
             if (err) {
@@ -164,7 +172,17 @@ const createBucket = async (bucketName) => {
     await waitUntilBucketExists({ client: s3Client}, { Bucket: bucketName });
     console.log("Bucket created successfully");
 };
-
+const checkIfUserExists = async (googleID) => {
+    try {
+        const userToFind = await User.findOne({ googleId: googleID });
+        if(!userToFind) {
+            throw new Error("User not found");
+        }
+    } catch (err) {
+        console.error("Error finding user in MongoDB:", err);
+        return false;
+    }
+}
 router.get('/getAllDocuments/:googleID', async (req, res) => {
     const { googleID } = req.params;
     /*
@@ -187,7 +205,11 @@ router.get('/getAllDocuments/:googleID', async (req, res) => {
     
     //This will return the Resume Key, job description, and Parsed Resume Key for all the past queries
     //each object is a past query
-    let listOfPastQueries = [{}];
+    if(!(await checkIfUserExists(googleID))) {
+        return res.status(400).json({ success: false, message: 'User does not exist' });
+    }
+
+    let listOfPastQueries = [];
     try {
         const pastQueryDocuments = await DocumentModel.findOne({ googleID : googleID});
         if (pastQueryDocuments) {
@@ -202,20 +224,19 @@ router.get('/getAllDocuments/:googleID', async (req, res) => {
                     parsedResumeKey: parsedResumeKey
                 });
             }
-            return res.status(200).json({ success: true, data: listOfPastQueries, message: " Past queries found" });
         } else {
             const newDoc = new DocumentModel({
                 googleID: googleID,
                 pastQueries: []
             });
             await newDoc.save();
-            return res.status(200).json({ success: true, data: [], message: " No past queries found" });
         }
     } catch (error) {
         console.error("Error fetching documents:", error);
         return res.status(500).json({ success: false, message: 'Error fetching documents' });
     }
-    
+    return res.status(200).json({ success: true, pastQueries: listOfPastQueries, message: " Past queries found" });
+
 });
-//router.get('/')
+// router.get('/')
 export default router;
