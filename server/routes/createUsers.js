@@ -87,7 +87,7 @@ router.post('/uploadFiles',
         const parsedResumeKey = uniqueKeyPrefix + "parsedOutputResume.pdf";
         try {
             const sendingOriginalFile = await s3Client.send(new PutObjectCommand({
-                Bucket: 'resumate-documents-storage-cloud-original-resume',
+                Bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
                 Key: resumeKey,
                 Body: await readFile(pathToOriginalResume)
             }));
@@ -97,7 +97,7 @@ router.post('/uploadFiles',
         }
         try {
             const sendingParsedFile = await s3Client.send(new PutObjectCommand({
-                Bucket: 'resumate-documents-storage-cloud-output-parsed-resume',
+                Bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
                 Key: parsedResumeKey,
                 Body: await readFile(pathToParsedResume)
             }));
@@ -190,10 +190,7 @@ router.get('/getAllDocuments/:googleID', async (req, res) => {
         2)  a) Interate through the pastQueries array and get the signed URL for each resume and parsed resume
             b) For each pastQuery element is an element in the drop down. And each element is associated with the
                 respective job description and URLS
-            c) When the user clicks on the element, create a GetObject request in which it'll provide the files associated
-               with the URLs and the job description
-            d) Send the files and the job description to the client as a blob
-            d) Display the files and the job description on the page <- This is done on the client side
+            
     */
     //find the document associated with the googleID
 
@@ -236,7 +233,77 @@ router.get('/getAllDocuments/:googleID', async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error fetching documents' });
     }
     return res.status(200).json({ success: true, pastQueries: listOfPastQueries, message: " Past queries found" });
-
 });
+
+router.get('/specificDocument/:googleID?originalResumeURL', async (req, res) => {
+    const { googleID } = req.params;
+    const { originalResumeURL} = req.query;
+    /*
+    c) When the user clicks on the element, create a GetObject request in which it'll provide the files associated
+               with the URLs and the job description
+            d) Send the files and the job description to the client as a blob
+            d) Display the files and the job description on the page <- This is done on the client side */
+    if(!(await checkIfUserExists(googleID))) {
+        return res.status(400).json({ success: false, message: 'User does not exist' });
+    }
+    //objects with .body, and Content-Type
+    let originalResumeStream;;
+    try {
+        originalResumeStream = await s3Client.send(new GetObjectCommand({
+            bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
+            key: originalResumeURL
+        }));
+    } catch (error) {
+        console.error("Error fetching original resume from S3:", error);
+        return res.status(500).json({ success: false, message: 'Error fetching original resume from S3', error });
+    }
+
+    const writeDirectory = path.join(__dirname, '../lib/client');
+    fs.writeFileAsync(path.join(writeDirectory, 'originalResumeToClient.pdf'), originalResumeStream.Body);
+    res.sendFile(path.join(writeDirectory, 'originalResumeToClient.pdf'), (err) => {
+        if (err) {
+            console.error("Error sending original resume file:", err);
+            return res.status(500).json({ success: false, message: 'Error sending original resume file', error: err });
+        }
+    });
+    fs.unlink(path.join(writeDirectory, 'originalResumeToClient.pdf'), (err) => {
+        if (err) {
+            console.error("Error deleting original resume file:", err);
+        }
+    });
+    
+});
+router.get('/specificDocument/:googleID?parsedResumeURL', async (req, res) => {
+    const { googleID } = req.params;
+    const { parsedResumeURL} = req.query;
+     if(!(await checkIfUserExists(googleID))) {
+        return res.status(400).json({ success: false, message: 'User does not exist' });
+    }
+    //objects with .body, and Content-Type
+    let parsedResumeStream;
+     try {
+        parsedResumeStream = await s3Client.send(new GetObjectCommand({
+            bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
+            key: parsedResumeURL
+        }));
+    } catch (error) {
+        console.error("Error fetching parsed resume from S3:", error);
+        return res.status(500).json({ success: false, message: 'Error fetching parsed resume from S3', error });
+    }
+    const writeDirectory = path.join(__dirname, '../lib/client');
+    fs.writeFileAsync(path.join(writeDirectory, 'parsedResumeToClient.pdf'), parsedResumeStream.Body);
+    res.sendFile(path.join(writeDirectory, 'parsedResumeToClient.pdf'), (err) => {
+        if (err) {
+            console.error("Error sending parsed resume file:", err);
+            return res.status(500).json({ success: false, message: 'Error sending parsed resume file', error: err });
+        }
+    });
+    fs.unlink(path.join(writeDirectory, 'parsedResumeToClient.pdf'), (err) => {
+        if (err) {
+            console.error("Error deleting parsed resume file:", err);
+        }
+    });
+});
+
 // router.get('/')
 export default router;
