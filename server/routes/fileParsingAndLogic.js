@@ -356,7 +356,7 @@ router.put('/changeToLaTeX', async (req, res) => {
   ];
   let latexResponse = "";
   try {
-    latexResponse = await openAI.invoke(message);
+    latexResponse = await googleGemini.invoke(message);
     // let firstChar = latexResponse.content.indexOf('%');
     // if(firstChar > 0) {
     //   latexResponse.content = latexResponse.content.slice(firstChar);
@@ -379,42 +379,22 @@ router.put('/changeToLaTeX', async (req, res) => {
 });
 
 router.post("/convertToPDF", async (req, res) => {
-  // try {
-  //   const { latexContent } = req.body;
-  //   console.log("LaTeX content being sent:", latexContent); // Debug
-
-  //   const formData = new FormData();
-  //   formData.append("latex", latexContent);
-
-  //   const pdfResponse = await axios.post("https://latexonline.cc/compile", formData, {
-  //     headers: formData.getHeaders(),
-  //     responseType: "arraybuffer",
-  //   });
-  //   //the pdfResponse.data is a buffer object that 
-  //   console.log("Received PDF response from LaTeX service, size:", pdfResponse.data.length); // Debug
-
-  //   res.setHeader("Content-Type", "application/pdf");
-  //   res.status(200).send(pdfResponse.data);
-  // } catch (error) {
-  //   console.error("Error converting LaTeX:", error.message);
-  //   res.status(500).json({ error: "Failed to convert LaTeX to PDF" });
-  // }
   const { latexContent } = req.body;
+  const outputDir = path.join(__dirname, "../lib/local");
   try {
-    // Save LaTeX code to a temp .tex file
-    const tempFile = path.join(__dirname, "../lib/temp.tex");
+    await fs.mkdir(outputDir, { recursive: true }); // Ensure output directory exists
+    const tempFile = path.join(outputDir, "temp.tex");
     await fs.writeFile(tempFile, latexContent);
 
-    // Compile using tectonic
     const pdfBuffer = await new Promise((resolve, reject) => {
-      const proc = spawn("tectonic", [tempFile, "--outdir=../lib", "--keep-logs"], {
+      const proc = spawn("tectonic", [tempFile, `--outdir=${outputDir}`, "--keep-logs"], {
         stdio: "inherit",
       });
 
       proc.on("close", async (code) => {
         if (code === 0) {
           try {
-            const buffer = await fs.readFile("temp.pdf");
+            const buffer = await fs.readFile(path.join(outputDir, "temp.pdf"));
             resolve(buffer);
           } catch (err) {
             reject(err);
@@ -425,7 +405,6 @@ router.post("/convertToPDF", async (req, res) => {
       });
     });
 
-    // Send back PDF buffer
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "inline; filename=output.pdf");
     res.status(200).send(pdfBuffer);
@@ -433,12 +412,9 @@ router.post("/convertToPDF", async (req, res) => {
   } catch (error) {
     console.error("Error converting LaTeX:", error);
     res.status(500).json({ error: "Failed to convert LaTeX to PDF" });
-  } finally {
-    try {
-      await fs.unlink(tempFile);
-      await fs.unlink("temp.pdf");
-    } catch (_) {}
   }
+
+  //Write code to delete the temp files <DO THIS LATER>
 });
 
 export default router;

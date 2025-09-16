@@ -17,10 +17,9 @@ const pastQuerySchema = new mongoose.Schema({
 });
 
 //this model will store all the documents for Queries
-const PastQueryModel = mongoose.model('PastQueryModel', pastQuerySchema);
 
 const DocumentStoring = new mongoose.Schema({
-    userId: {
+    googleID: {
         type: String,
         required: true,
         unique: true
@@ -31,6 +30,6 @@ const DocumentStoring = new mongoose.Schema({
 const DocumentModel = mongoose.model('DocumentModel', DocumentStoring);
 
 
-export default {DocumentModel, PastQueryModel};
+export default DocumentModel;
 
 //USE EITHER PUTOBJECT OR MANAGEDUPLOAD FOR UPLOADING THE FILES TO S3

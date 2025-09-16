@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FormData } from 'form-data';
 import axios from 'axios';
 import { useUser } from '../../Components/context/UserContext.js';
 function OutputPage() {
@@ -18,26 +17,38 @@ function OutputPage() {
   };
 
   useEffect(() => {
-    //I would want to create a request in which it takes the pdf and the job description sent by the user and store it inside the database
-    const filesToServer = new FormData();
-    filesToServer.append("originalResume", userInfo.file);
-    filesToServer.append("jobDescription", userInfo.jobDescription);
-    filesToServer.append("parsedResumeURL", pdfUrl); // This is a link to the pdf file
-    filesToServer.append("googleID", userInfo.user.googleID);
-    /*
-      This will download the file from the link, get the the original file and download it locally. Then both files will be sent to the s3 bucket
-      and we'll get the URL of the files and store it inside the mongoDB 
+    async function uploadFiles() {
+      //I would want to create a request in which it takes the pdf and the job description sent by the user and store it inside the database
+      const filesToServer = new FormData();
+      filesToServer.append("originalResume", userInfo.file, "originalResume.pdf");
+      filesToServer.append("jobDescription", userInfo.jobDescription);
+      filesToServer.append("googleID", userInfo.user.googleID);
+      const response = await axios.get(pdfUrl, { responseType: 'blob' });
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfFile = new File([pdfBlob], 'parsedResume.pdf', { type: 'application/pdf' });
+      //filesToServer.append("parsedResumeURL", pdfUrl); // This is a link to the pdf file
+      filesToServer.append("parsedOutputResume", pdfFile, "parsedOutputResume.pdf");
 
-      After that, delete the local files
-    */
+      //filesToServer.append("googleID", userInfo.user.googleID);
+      /*
+        This will download the file from the link, get the the original file and download it locally. Then both files will be sent to the s3 bucket
+        and we'll get the URL of the files and store it inside the mongoDB 
 
-      
-    axios.post('users/uploadFiles', filesToServer, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+        After that, delete the local files
+      */
+
+      try {
+        await axios.post('http://localhost:5000/users/uploadFiles', filesToServer, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }  catch (error) {
+        console.error("Error uploading files to server:", error);
       }
-    });
-  }, []);
+    }
+    uploadFiles();
+  }, [pdfUrl]);
   return (
     <div style={{ textAlign: 'center', marginTop: '40px' }}>
       <h2>Your Resume PDF is Ready!</h2>
