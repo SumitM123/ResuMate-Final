@@ -106,16 +106,6 @@ router.post('/uploadFiles',
             return res.status(500).json({ success: false, message: 'Error uploading parsed resume to S3' });
         }
         
-        // fs.unlink(pathToOriginalResume, (err) => {
-        //     if (err) {
-        //         console.error("Error deleting original resume file:", err);
-        //     }
-        // });
-        // fs.unlink(pathToParsedResume, (err) => {
-        //     if (err) {
-        //         console.error("Error deleting parsed resume file:", err);
-        //     }
-        // });
 
         //URL of the object: https://<bucket-name>.s3.<region>.amazonaws.com/<object-key> <- Not doing this approach cause then we have to make it public
 
@@ -145,6 +135,18 @@ router.post('/uploadFiles',
             console.error("Error saving document to MongoDB:", err);
             return res.status(500).json({ success: false, message: 'Error saving document to MongoDB' });
        }
+
+       fs.unlink(pathToOriginalResume, (err) => {
+            if (err) {
+                console.error("Error deleting original resume file:", err);
+            }
+        });
+        fs.unlink(pathToParsedResume, (err) => {
+            if (err) {
+                console.error("Error deleting parsed resume file:", err);
+            }
+        }); 
+
        return res.status(200).json({ success: true, message: 'Files uploaded and document saved successfully' });
 });
 
@@ -163,7 +165,7 @@ const createBucket = async (bucketName) => {
     console.log("Bucket created successfully");
 };
 
-router.get('/getDocuments/:googleID', async (req, res) => {
+router.get('/getAllDocuments/:googleID', async (req, res) => {
     const { googleID } = req.params;
     /*
         1) find the document associated with the googleID
@@ -176,6 +178,44 @@ router.get('/getDocuments/:googleID', async (req, res) => {
             d) Display the files and the job description on the page <- This is done on the client side
     */
     //find the document associated with the googleID
-    ``
+
+
+    //EACH DOCUMENT MODEL IS UNIQUE BY GOOGLEID
+    //EACH PAST QUERY IS UNIQUE BY DATE
+        //ONE FOR ORIGINAL RESUME
+        //ONE FOR PARSED OUTPUT RESUME
+    
+    //This will return the Resume Key, job description, and Parsed Resume Key for all the past queries
+    //each object is a past query
+    let listOfPastQueries = [{}];
+    try {
+        const pastQueryDocuments = await DocumentModel.findOne({ googleID : googleID});
+        if (pastQueryDocuments) {
+            for(let i = 0; i < pastQueryDocuments.pastQueries.length; i++) {
+                const currentQuery = pastQueryDocuments.pastQueries[i];
+                let originalResumeKey = currentQuery.get('resume');
+                let jobDescription = currentQuery.get('JobDescription');
+                let parsedResumeKey = currentQuery.get('parsedResume');
+                listOfPastQueries.push({
+                    originalResumeKey: originalResumeKey,
+                    jobDescription: jobDescription,
+                    parsedResumeKey: parsedResumeKey
+                });
+            }
+            return res.status(200).json({ success: true, data: listOfPastQueries, message: " Past queries found" });
+        } else {
+            const newDoc = new DocumentModel({
+                googleID: googleID,
+                pastQueries: []
+            });
+            await newDoc.save();
+            return res.status(200).json({ success: true, data: [], message: " No past queries found" });
+        }
+    } catch (error) {
+        console.error("Error fetching documents:", error);
+        return res.status(500).json({ success: false, message: 'Error fetching documents' });
+    }
+    
 });
+//router.get('/')
 export default router;
