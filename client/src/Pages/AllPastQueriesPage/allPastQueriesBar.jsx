@@ -4,8 +4,11 @@ import { useState } from "react";
 import axios from "axios";
 import { useUser } from '../../Components/context/UserContext.js'
 import displayOnePastQuery from '../../Components/displayPastQuery/displayOnePastQuery.jsx'
+import { useNavigate } from "react-router-dom";
 function allPastQueriesPage() {
     const userInfo = useUser();
+    const navigate = useNavigate();
+    
     const{ googleID } = userInfo.user;
     const [queryMap, setQueryMap] = useState(new Map());
     const [index, setIndex] = useState(0); // This will be used to keep track of the index of the queries
@@ -46,6 +49,19 @@ function allPastQueriesPage() {
         }
         return <ul>{queriesList}</ul>;
     };
+    const previousClick = (e) => {
+        e.preventDefault();
+    }
+    const nextClick = (e) => {
+        e.preventDefault();
+    }
+    const deleteClick = (e) => {
+        e.preventDefault();
+    }
+    const backToApplication = (e) => { 
+        e.preventDefault();
+        navigate('/applicationPage')
+    }
     return (
         <>
         
@@ -54,8 +70,10 @@ function allPastQueriesPage() {
                 {displayingAllQueries()}
             </div>
             <div>
-                <button> Previous </button>
-                <button> Next </button>
+                <button onClick={previousClick}> Previous </button>
+                <button onClick={nextClick}> Next </button>
+                <button onClick={deleteClick}> Delete </button>
+                <button onClick={backToApplication}> Back to Application </button>
             </div>
             <div>
                 <displayOnePastQuery 
