@@ -46,10 +46,21 @@ function allPastQueriesPage() {
         for (const [key, value] of queryMap) {
             const index = value.originalResumeKey.indexOf('-');
             const queryName = value.originalResumeKey.substring(0, index);
-            queriesList.push(<li key={key}>{queryName}</li>);
+            queriesList.push(<li onClick={(e) => queryClick(e, key)} key={key}>{queryName}</li>);
         }
         return <ul>{queriesList}</ul>;
     };
+    const queryClick = (e, key) => {
+        e.preventDefault();
+        setIndex(prevValue => {
+                    let newValue = key;
+                    setCurrentQuery(queryMap.get(newValue));
+                    return newValue;
+                }
+        )
+        setIndex(key);
+        setCurrentQuery(queryMap.get(key));
+    }
     const previousClick = (e) => {
         e.preventDefault();
         if(index <=0) {
@@ -105,6 +116,8 @@ function allPastQueriesPage() {
                     }
                 }   
             }
+
+            //MAKE A DELETE REQUEST TO BACK END TO DELETE FROM MONGODB AND S3
             return newMap;
         });
     }

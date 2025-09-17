@@ -305,5 +305,6 @@ router.get('/specificDocument/:googleID?parsedResumeURL', async (req, res) => {
     });
 });
 
+router.delete(); //WORK ON THIS 
 // router.get('/')
 export default router;
