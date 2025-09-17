@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import axios from "axios";
 import { useUser } from '../../Components/context/UserContext.js'
-import displayOnePastQuery from '../../Components/displayPastQuery/displayOnePastQuery.jsx'
+import DisplayOnePastQuery from '../../Components/displayPastQuery/displayOnePastQuery.jsx'
 import { useNavigate } from "react-router-dom";
 function allPastQueriesPage() {
     const userInfo = useUser();
@@ -60,19 +60,19 @@ function allPastQueriesPage() {
             const newIndex = prevIndex - 1;
             setCurrentQuery(queryMap.get(newIndex));
             return newIndex;
-        })
+        });
     }
     const nextClick = (e) => {
         e.preventDefault();
         if(index >= queryMap.size - 1) {
             alert("Cannot go further forward");
             return;
-        }
+        };
         setIndex(prevIndex => {
             const newIndex = prevIndex + 1;
             setCurrentQuery(queryMap.get(newIndex));
             return newIndex;
-        })
+        });
     }
     const deleteClick = (e) => {
         e.preventDefault();
@@ -104,9 +104,9 @@ function allPastQueriesPage() {
                         }
                     }
                 }   
+            }
             return newMap;
         });
-
     }
     const backToApplication = (e) => { 
         e.preventDefault();
@@ -127,7 +127,7 @@ function allPastQueriesPage() {
             </div>
             <div>
                 {currentQuery != null ? (
-                    <displayOnePastQuery 
+                    <DisplayOnePastQuery 
                         googleID={googleID} 
                         originalResumeURL={currentQuery?.originalResumeURL}
                         parsedResumeURL={currentQuery?.parsedResumeURL}
