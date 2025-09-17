@@ -8,17 +8,18 @@ import { useNavigate } from "react-router-dom";
 function allPastQueriesPage() {
     const userInfo = useUser();
     const navigate = useNavigate();
-    
+
     const{ googleID } = userInfo.user;
     const [queryMap, setQueryMap] = useState(new Map());
     const [index, setIndex] = useState(0); // This will be used to keep track of the index of the queries
     
     const [currentQuery, setCurrentQuery] = useState(null); // This will be used to display the current query
     useEffect(() => {
-        async () => {
+        async function fetchData() {
             await gettingDocuments();
             displayingAllQueries();
         }
+        fetchData();
     }, []); 
 
     const gettingDocuments = async () => {
@@ -51,12 +52,61 @@ function allPastQueriesPage() {
     };
     const previousClick = (e) => {
         e.preventDefault();
+        if(index <=0) {
+            alert("Cannot go further back");
+            return;
+        }
+        setIndex(prevIndex => {
+            const newIndex = prevIndex - 1;
+            setCurrentQuery(queryMap.get(newIndex));
+            return newIndex;
+        })
     }
     const nextClick = (e) => {
         e.preventDefault();
+        if(index >= queryMap.size - 1) {
+            alert("Cannot go further forward");
+            return;
+        }
+        setIndex(prevIndex => {
+            const newIndex = prevIndex + 1;
+            setCurrentQuery(queryMap.get(newIndex));
+            return newIndex;
+        })
     }
     const deleteClick = (e) => {
         e.preventDefault();
+        setQueryMap(prevMap => {
+            const newMap = new Map(prevMap);
+            newMap.delete(index);
+            let tempQuery = null;
+            if(newMap.size === 0) {
+                setCurrentQuery(null);
+                setIndex(0);
+                return newMap;
+            } else {
+                const tempIndex = index + 1;
+                //trying to display the next query
+                for(let i = tempIndex; i < newMap.size; i++) {
+                    if(newMap.has(i)) {
+                        setIndex(i);
+                        setCurrentQuery(newMap.get(i));
+                        tempQuery = newMap.get(i);
+                        break;
+                    }
+                }
+                if(!tempQuery) {
+                    for(let i = 0; i < tempIndex; i++) {
+                        if(newMap.has(i)) {
+                            setIndex(i);
+                            setCurrentQuery(newMap.get(i));
+                            break;
+                        }
+                    }
+                }   
+            return newMap;
+        });
+
     }
     const backToApplication = (e) => { 
         e.preventDefault();
@@ -76,12 +126,16 @@ function allPastQueriesPage() {
                 <button onClick={backToApplication}> Back to Application </button>
             </div>
             <div>
-                <displayOnePastQuery 
-                    googleID={googleID} 
-                    originalResumeURL={queryMap.get(index)?.originalResumeURL}
-                    parsedResumeURL={queryMap.get(index)?.parsedResumeURL}
-                    jobDescription={queryMap.get(index)?.jobDescription}
-                />
+                {currentQuery != null ? (
+                    <displayOnePastQuery 
+                        googleID={googleID} 
+                        originalResumeURL={currentQuery?.originalResumeURL}
+                        parsedResumeURL={currentQuery?.parsedResumeURL}
+                        jobDescription={currentQuery?.jobDescription} 
+                    />
+                ) : (
+                    <h2>No Past Queries</h2>
+                )}
             </div>
         </>
     );
