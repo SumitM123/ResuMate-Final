@@ -87,7 +87,7 @@ function allPastQueriesPage() {
     }
     const deleteClick = (e) => {
         e.preventDefault();
-        setQueryMap(prevMap => {
+        setQueryMap(async (prevMap) => {
             const newMap = new Map(prevMap);
             newMap.delete(index);
             let tempQuery = null;
@@ -116,7 +116,13 @@ function allPastQueriesPage() {
                     }
                 }   
             }
-
+            try {
+                await axios.delete(`/users/deleteDocument/${googleID}`, {
+                    data: { originalResumeKey: currentQuery.originalResumeKey }
+                });
+            } catch (error) {
+                console.error("Error deleting document:", error);
+            }
             //MAKE A DELETE REQUEST TO BACK END TO DELETE FROM MONGODB AND S3
             return newMap;
         });

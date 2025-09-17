@@ -305,6 +305,50 @@ router.get('/specificDocument/:googleID?parsedResumeURL', async (req, res) => {
     });
 });
 
-router.delete(); //WORK ON THIS 
+router.delete('/specificDocument/:googleID', async (req, res) => {
+    const { googleID } = req.params;
+    const { originalResumeKeysumeKey } = req.body;
+
+    if(!(await checkIfUserExists(googleID))) {
+        return res.status(400).json({ success: false, message: 'User does not exist' });
+    }
+    //detete the object from original resume bucket
+    try {
+        await client.send(new DeleteObjectCommand({
+            Bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
+            Key: originalResumeKey
+        }));
+    } catch (error) {
+        console.error("Error deleting original resume from S3:", error);
+        return res.status(500).json({ success: false, message: 'Error deleting original resume from S3', error });
+    }
+    //delete the object from parsed resume bucket
+    try {
+        await client.send(new DeleteObjectCommand({
+            Bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
+            Key: parsedResumeKey
+        }));
+    } catch (error) {
+        console.error("Error deleting parsed resume from S3:", error);
+        return res.status(500).json({ success: false, message: 'Error deleting parsed resume from S3', error });
+    }
+
+    //delete the document from the mongoDB model
+    await DocumentModel.findOne({ googleID: googleID }).then(async (document) => {
+        for(let i = 0; i < document.pastQueries.length; i++) {
+            const currentQuery = document.pastQueries[i];
+            if(currentQuery.resume === originalResumeKey) {
+                document.pastQueries[i].deleteOne();
+                break;
+            }
+        }
+        await document.save();
+    }).catch((error) => {
+        console.error("Error finding document in MongoDB:", error);
+        return res.status(500).json({ success: false, message: 'Error finding document in MongoDB', error });
+    });
+    return res.status(200).json({ success: true, message: 'Document deleted successfully' });
+    
+});
 // router.get('/')
 export default router;
