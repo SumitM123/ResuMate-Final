@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../Components/context/UserContext';
 
+
 function SignInPage() {
   //only receives the totken, not the full user profile.
   const navigate = useNavigate();
@@ -23,13 +24,18 @@ function SignInPage() {
       if (userData.data) {
         console.log('User info:', userData.data);
         // Save user data to context. You do so by accessing the value property of component through useUser() hook, and then modifying the properies of the value object
-        
+        console.log("Logging in user with data:", userData.data);
         // will contain the properties
         login(userData.data);
 
         //Add User to the database
+        const dataToSend = {
+          googleId: userData.data.googleId,
+          name: userData.data.name,
+          email: userData.data.email,
+        }
         try {
-          const addingUser = await axios.post('/users/addUser', userData.data, {
+          const addingUser = await axios.post('/users/addUser', dataToSend, {
             headers: {
               'Content-Type': 'application/json',
             }
@@ -38,8 +44,6 @@ function SignInPage() {
         } catch (error) {
           console.error('Error adding user:', error);
         }
-
-        navigate('/application');
       } else {
         console.error('No user data received from server');
       }
@@ -47,9 +51,10 @@ function SignInPage() {
       console.error('Login error:', err);
       console.error('Error details:', err.response?.data || err.message);
     }
+    navigate('/application');
   };
   return (
-    <GoogleOAuthProvider clientId="305627446808-daj9lmdn792fhqsg1smsv7prrt9db3p4.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
       <div style={{
         height: '100vh',
         display: 'flex',

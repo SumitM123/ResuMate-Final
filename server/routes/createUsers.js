@@ -62,7 +62,7 @@ router.post('/uploadFiles',
         { name: 'parsedOutputResume', maxCount: 1 }
     ]), 
     async (req, res) => {
-        const { googleID, jobDescription } = req.body;
+        const { googleId, jobDescription } = req.body;
 
         //let outputResumeFile;
         let uniqueKeyPrefix = Date.now() + '-';
@@ -116,13 +116,13 @@ router.post('/uploadFiles',
         */
 
         //checking if user exists inside of the user collection
-        if(!(await checkIfUserExists(googleID))) {
+        if(!(await checkIfUserExists(googleId))) {
             return res.status(400).json({ success: false, message: 'User does not exist' });
         }
 
         try {
            //when returning a promise, it means either resolving or rejecting
-           const document = await DocumentModel.findOne({ googleID: googleID });
+           const document = await DocumentModel.findOne({ googleId: googleId });
            if (document) {
                 document.pastQueries.push({resume: resumeKey, JobDescription: jobDescription, parsedResume: parsedResumeKey});
                 await document.save();
@@ -130,7 +130,7 @@ router.post('/uploadFiles',
                 //might have to delete this else statement because we're creating the document model to new user through getAllDocuments route <- DO THIS LATER
                 //instead, might have to throw an error
                 const newDoc = new DocumentModel({
-                    googleID: googleID,
+                    googleId: googleId,
                     pastQueries: [{
                         resume: resumeKey,
                         JobDescription: jobDescription,
@@ -172,9 +172,10 @@ const createBucket = async (bucketName) => {
     await waitUntilBucketExists({ client: s3Client}, { Bucket: bucketName });
     console.log("Bucket created successfully");
 };
-const checkIfUserExists = async (googleID) => {
+const checkIfUserExists = async (googleId) => {
+    let strGoogleId = googleId.toString();
     try {
-        const userToFind = await User.findOne({ googleId: googleID });
+        const userToFind = await User.findOne({ googleId: strGoogleId }).exec();
         if(!userToFind) {
             throw new Error("User not found");
         }
@@ -183,16 +184,16 @@ const checkIfUserExists = async (googleID) => {
         return false;
     }
 }
-router.get('/getAllDocuments/:googleID', async (req, res) => {
-    const { googleID } = req.params;
+router.get('/getAllDocuments/:googleId', async (req, res) => {
+    const { googleId } = req.params;
     /*
-        1) find the document associated with the googleID
+        1) find the document associated with the googleId
         2)  a) Interate through the pastQueries array and get the signed URL for each resume and parsed resume
             b) For each pastQuery element is an element in the drop down. And each element is associated with the
                 respective job description and URLS
             
     */
-    //find the document associated with the googleID
+    //find the document associated with the googleId
 
 
     //EACH DOCUMENT MODEL IS UNIQUE BY GOOGLEID
@@ -202,13 +203,13 @@ router.get('/getAllDocuments/:googleID', async (req, res) => {
     
     //This will return the Resume Key, job description, and Parsed Resume Key for all the past queries
     //each object is a past query
-    if(!(await checkIfUserExists(googleID))) {
+    if(!(await checkIfUserExists(googleId))) {
         return res.status(400).json({ success: false, message: 'User does not exist' });
     }
 
     let listOfPastQueries = [];
     try {
-        const pastQueryDocuments = await DocumentModel.findOne({ googleID : googleID});
+        const pastQueryDocuments = await DocumentModel.findOne({ googleId : googleId});
         if (pastQueryDocuments) {
             for(let i = 0; i < pastQueryDocuments.pastQueries.length; i++) {
                 const currentQuery = pastQueryDocuments.pastQueries[i];
@@ -223,7 +224,7 @@ router.get('/getAllDocuments/:googleID', async (req, res) => {
             }
         } else {
             const newDoc = new DocumentModel({
-                googleID: googleID,
+                googleId: googleId,
                 pastQueries: []
             });
             await newDoc.save();
@@ -235,15 +236,15 @@ router.get('/getAllDocuments/:googleID', async (req, res) => {
     return res.status(200).json({ success: true, pastQueries: listOfPastQueries, message: " Past queries found" });
 });
 
-router.get('/specificDocument/:googleID?originalResumeURL', async (req, res) => {
-    const { googleID } = req.params;
+router.get('/specificDocument/:googleId', async (req, res) => {
+    const { googleId } = req.params;
     const { originalResumeURL} = req.query;
     /*
     c) When the user clicks on the element, create a GetObject request in which it'll provide the files associated
                with the URLs and the job description
             d) Send the files and the job description to the client as a blob
             d) Display the files and the job description on the page <- This is done on the client side */
-    if(!(await checkIfUserExists(googleID))) {
+    if(!(await checkIfUserExists(googleId))) {
         return res.status(400).json({ success: false, message: 'User does not exist' });
     }
     //objects with .body, and Content-Type
@@ -273,10 +274,10 @@ router.get('/specificDocument/:googleID?originalResumeURL', async (req, res) => 
     });
     
 });
-router.get('/specificDocument/:googleID?parsedResumeURL', async (req, res) => {
-    const { googleID } = req.params;
+router.get('/specificDocument/:googleId', async (req, res) => {
+    const { googleId } = req.params;
     const { parsedResumeURL} = req.query;
-     if(!(await checkIfUserExists(googleID))) {
+     if(!(await checkIfUserExists(googleId))) {
         return res.status(400).json({ success: false, message: 'User does not exist' });
     }
     //objects with .body, and Content-Type
@@ -305,11 +306,11 @@ router.get('/specificDocument/:googleID?parsedResumeURL', async (req, res) => {
     });
 });
 
-router.delete('/specificDocument/:googleID', async (req, res) => {
-    const { googleID } = req.params;
+router.delete('/specificDocument/:googleId', async (req, res) => {
+    const { googleId } = req.params;
     const { originalResumeKeysumeKey } = req.body;
 
-    if(!(await checkIfUserExists(googleID))) {
+    if(!(await checkIfUserExists(googleId))) {
         return res.status(400).json({ success: false, message: 'User does not exist' });
     }
     //detete the object from original resume bucket
@@ -334,7 +335,7 @@ router.delete('/specificDocument/:googleID', async (req, res) => {
     }
 
     //delete the document from the mongoDB model
-    await DocumentModel.findOne({ googleID: googleID }).then(async (document) => {
+    await DocumentModel.findOne({ googleId: googleId }).then(async (document) => {
         for(let i = 0; i < document.pastQueries.length; i++) {
             const currentQuery = document.pastQueries[i];
             if(currentQuery.resume === originalResumeKey) {

@@ -11,15 +11,23 @@ import mongoose from 'mongoose';
 
 // Schema for storing the actual resume file, job description, and the parsed resume
 const pastQuerySchema = new mongoose.Schema({
-    resume: String, //Key of the resume file in cloud storage
+    resume: {
+        type: String,
+        required: true,
+        unique: true
+    },
     JobDescription: String,
-    parsedResume: String //Key of the parsed resume file in cloud storage
+    parsedResume: {
+        type: String,
+        required: true,
+        unique: true
+    } 
 });
 
 //this model will store all the documents for Queries
 
 const DocumentStoring = new mongoose.Schema({
-    googleID: {
+    googleId: {
         type: String,
         required: true,
         unique: true

@@ -3,9 +3,9 @@ import { useState } from "react";
 import axios from "axios";
 import URL from 'url-parse';
 
-function displayOnePastQuery(props) {
-    //from the props, we're going to be given googleID, and the two URLS
-    const [googleID, setGoogleID] = useState(props.googleID);
+function DisplayOnePastQuery(props) {
+    //from the props, we're going to be given googleId, and the two URLS
+    const [googleId, setGoogleID] = useState(props.googleId);
     const [originalResumeURL, setOriginalResumeURL] = useState(props.originalResumeURL);
     const [parsedResumeURL, setParsedResumeURL] = useState(props.parsedResumeURL);
     const [jobDescription, setJobDescription] = useState(props.jobDescription);
@@ -15,19 +15,20 @@ function displayOnePastQuery(props) {
     const [parsedResumeURLToDisplay, setParsedResumeURLToDisplay] = useState(null);
 
     useEffect(() => {
-        async () => {
-            const originalResumeStream = await axios.get(`/users/specificDocument/${googleID}?originalResumeURL=${originalResumeURL}`, { responseType: 'application/pdf' });
-            const parsedResumeStream = await axios.get(`/users/specificDocument/${googleID}?parsedResumeURL=${parsedResumeURL}`, { responseType: 'application/pdf' });
-            
-            const originalResumeFile = new File([originalResumeStream.data], 'originalResume.pdf', { type: 'application/pdf' });
-            const parsedResumeFile = new File([parsedResumeStream.data], 'parsedResume.pdf', { type: 'application/pdf' });
-            // Now you can use originalResumeFile and parsedResumeFile as needed
-            setOriginalResumeURLToDisplay(URL.createObjectURL(originalResumeFile));
-            setParsedResumeURLToDisplay(URL.createObjectURL(parsedResumeFile));
+        async function funcCall() {
+            await gettingRespectiveQueries();
         }
-    }, [googleID, originalResumeURL, parsedResumeURL]);
+        funcCall();
+    }, [googleId, originalResumeURL, parsedResumeURL]);
     const gettingRespectiveQueries = async () => {
+        const originalResumeStream = await axios.get(`/users/specificDocument/${googleId}?originalResumeURL=${originalResumeURL}`, { responseType: 'application/pdf' });
+        const parsedResumeStream = await axios.get(`/users/specificDocument/${googleId}?parsedResumeURL=${parsedResumeURL}`, { responseType: 'application/pdf' });
         
+        const originalResumeFile = new File([originalResumeStream.data], 'originalResume.pdf', { type: 'application/pdf' });
+        const parsedResumeFile = new File([parsedResumeStream.data], 'parsedResume.pdf', { type: 'application/pdf' });
+        // Now you can use originalResumeFile and parsedResumeFile as needed
+        setOriginalResumeURLToDisplay(URL.createObjectURL(originalResumeFile));
+        setParsedResumeURLToDisplay(URL.createObjectURL(parsedResumeFile));
     }
     return (
         <div>
@@ -39,4 +40,4 @@ function displayOnePastQuery(props) {
         </div>
     );
 }
-export default displayOnePastQuery;
+export default DisplayOnePastQuery;
