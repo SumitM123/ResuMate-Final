@@ -64,6 +64,9 @@ router.post('/uploadFiles',
     async (req, res) => {
         const { googleId, jobDescription } = req.body;
 
+        if(!(await checkIfUserExists(googleId))) {
+            return res.status(400).json({ success: false, message: 'User does not exist' });
+        }
         //let outputResumeFile;
         let uniqueKeyPrefix = Date.now() + '-';
         // axios.get(parsedResumeURL, { responseType: 'arraybuffer' })
@@ -116,9 +119,6 @@ router.post('/uploadFiles',
         */
 
         //checking if user exists inside of the user collection
-        if(!(await checkIfUserExists(googleId))) {
-            return res.status(400).json({ success: false, message: 'User does not exist' });
-        }
 
         try {
            //when returning a promise, it means either resolving or rejecting
@@ -179,11 +179,13 @@ const checkIfUserExists = async (googleId) => {
         if(!userToFind) {
             throw new Error("User not found");
         }
+        return true;
     } catch (err) {
         console.error("Error finding user in MongoDB:", err);
         return false;
     }
 }
+
 router.get('/getAllDocuments/:googleId', async (req, res) => {
     const { googleId } = req.params;
     /*
