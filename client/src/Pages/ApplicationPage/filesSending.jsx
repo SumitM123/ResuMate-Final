@@ -8,7 +8,7 @@ import {useNavigate} from "react-router-dom";
 
 //show previous queries
 
-function filesSending() {
+function FilesSending() {
     //const [u]
     const navigate = useNavigate();
     const goToPastQueries = () => {
@@ -26,4 +26,4 @@ function filesSending() {
         </>
     );
 }
-export default filesSending;
+export default FilesSending;

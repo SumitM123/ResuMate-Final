@@ -9,7 +9,7 @@ function allPastQueriesPage() {
     const userInfo = useUser();
     const navigate = useNavigate();
 
-    const{ googleID } = userInfo.user;
+    const{ googleId } = userInfo.user;
     const [queryMap, setQueryMap] = useState(new Map());
     const [index, setIndex] = useState(0); // This will be used to keep track of the index of the queries
     
@@ -25,7 +25,7 @@ function allPastQueriesPage() {
     const gettingDocuments = async () => {
         let allQueries;
         try {
-            allQueries = await axios.get(`/users/getAllDocments/${googleID}`);
+            allQueries = await axios.get(`/users/getAllDocments/${googleId}`);
         } catch (error) {
             console.error("Error fetching past queries:", error);
             return;
@@ -117,12 +117,13 @@ function allPastQueriesPage() {
                 }   
             }
             try {
-                await axios.delete(`/users/deleteDocument/${googleID}`, {
+                await axios.delete(`/users/deleteDocument/${googleId}`, {
                     data: { originalResumeKey: currentQuery.originalResumeKey }
                 });
             } catch (error) {
                 console.error("Error deleting document:", error);
             }
+            const rerender = displayingAllQueries();
             //MAKE A DELETE REQUEST TO BACK END TO DELETE FROM MONGODB AND S3
             return newMap;
         });
@@ -147,7 +148,7 @@ function allPastQueriesPage() {
             <div>
                 {currentQuery != null ? (
                     <DisplayOnePastQuery 
-                        googleID={googleID} 
+                        googleId={googleId} 
                         originalResumeURL={currentQuery?.originalResumeURL}
                         parsedResumeURL={currentQuery?.parsedResumeURL}
                         jobDescription={currentQuery?.jobDescription} 

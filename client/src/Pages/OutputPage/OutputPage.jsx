@@ -22,14 +22,14 @@ function OutputPage() {
       const filesToServer = new FormData();
       filesToServer.append("originalResume", userInfo.file, "originalResume.pdf");
       filesToServer.append("jobDescription", userInfo.jobDescription);
-      filesToServer.append("googleID", userInfo.user.googleID);
+      filesToServer.append("googleId", userInfo.user.googleId);
       const response = await axios.get(pdfUrl, { responseType: 'blob' });
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfFile = new File([pdfBlob], 'parsedResume.pdf', { type: 'application/pdf' });
       //filesToServer.append("parsedResumeURL", pdfUrl); // This is a link to the pdf file
       filesToServer.append("parsedOutputResume", pdfFile, "parsedOutputResume.pdf");
 
-      //filesToServer.append("googleID", userInfo.user.googleID);
+      //filesToServer.append("googleId", userInfo.user.googleId);
       /*
         This will download the file from the link, get the the original file and download it locally. Then both files will be sent to the s3 bucket
         and we'll get the URL of the files and store it inside the mongoDB 
