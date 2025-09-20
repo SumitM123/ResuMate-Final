@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useState } from "react";
 import axios from "axios";
-import URL from 'url-parse';
 
 function DisplayOnePastQuery(props) {
     //from the props, we're going to be given googleId, and the two URLS
@@ -30,18 +29,22 @@ function DisplayOnePastQuery(props) {
                 resumeURL: originalResumeURL,
                 isOriginalResume: true
             },
-            responseType: 'application/pdf' });
+            responseType: 'blob' });
         const parsedResumeStream = await axios.get(`/users/specificDocument/${googleId}`, {
             params: {
                 parsedResumeURL: parsedResumeURL,
                 isOriginalResume: false
             },
-            responseType: 'application/pdf' });
+            responseType: 'blob'});
+        /*
+            The server's Content-Type header is a suggestion or hint to the browser about how to handle the data. However, the client's configuration (axios({ responseType: 'arraybuffer' })) is what ultimately tells the network request library how to interpret the incoming byte stream and format the final result for your JavaScript code. 
+            So, a server can send a PDF with the header Content-Type: application/pdf, and if your client-side Axios call uses responseType: 'arraybuffer', your JavaScript code will correctly receive an ArrayBuffer.
+        */
         const originalResumeFile = new File([originalResumeStream.data], 'originalResume.pdf', { type: 'application/pdf' });
         const parsedResumeFile = new File([parsedResumeStream.data], 'parsedResume.pdf', { type: 'application/pdf' });
         // Now you can use originalResumeFile and parsedResumeFile as needed
-        setOriginalResumeURLToDisplay(URL.createObjectURL(originalResumeFile));
-        setParsedResumeURLToDisplay(URL.createObjectURL(parsedResumeFile));
+        setOriginalResumeURLToDisplay(window.URL.createObjectURL(originalResumeFile));
+        setParsedResumeURLToDisplay(window.URL.createObjectURL(parsedResumeFile));
     }
     return (
         <div>

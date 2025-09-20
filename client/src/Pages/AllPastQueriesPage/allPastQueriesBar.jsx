@@ -14,6 +14,9 @@ function AllPastQueriesPage() {
     
     const [currentQuery, setCurrentQuery] = useState(null); // This will be used to display the current query
     useEffect(() => {
+        setCurrentQuery(queryMap.get(index) ?? null);
+    }, [index, queryMap]);
+    useEffect(() => {
         async function fetchData() {
             await gettingDocuments();
             displayingAllQueries();
@@ -45,16 +48,16 @@ function AllPastQueriesPage() {
         for (const [key, value] of queryMap) {
             const index = value.originalResumeKey.indexOf('-');
             const queryName = value.originalResumeKey.substring(0, index);
-            queriesList.push(<li onClick={(e) => queryClick(e)} value={key}>{queryName}</li>);
+            queriesList.push(<button onClick={(e) => queryClick(e)} key={key} value={key}>{queryName}</button>);
         }
         return <ul>{queriesList}</ul>;
     };
-    const queryClick = (e) => {
+    const queryClick = (e, key) => {
         e.preventDefault();
-        const key = parseInt(e.target.getAttribute("value"));
+        const value = parseInt(e.target.getAttribute("value"));
         setIndex(prevValue => {
-            let newValue = key;
-            setCurrentQuery(queryMap.get(newValue));
+            let newValue = value;
+            //setCurrentQuery(queryMap.get(newValue));
             return newValue;
         });
     }
@@ -62,16 +65,18 @@ function AllPastQueriesPage() {
         e.preventDefault();
         //if index is the same as the first key in the map. NOT 0. BECAUSE OF DELETE
         let beforeIndex = index - 1;
-        while(beforeIndex >= 0 && !queryMap.has(beforeIndex)) {
-            beforeIndex--;
-        }
-        if(beforeIndex < 0) {
+        const mapKeys = Array.from(queryMap.keys());
+        const firstKey = mapKeys[0];
+        if(beforeIndex <= firstKey) {
             alert("Cannot go further back");
             return;
         }
+        while(beforeIndex > firstKey && !queryMap.has(beforeIndex)) {
+            beforeIndex--;
+        }
         setIndex(prevIndex => {
             const newIndex = beforeIndex;
-            setCurrentQuery(queryMap.get(newIndex));
+            //setCurrentQuery(queryMap.get(newIndex));
             return newIndex;
         });
     }
@@ -79,16 +84,18 @@ function AllPastQueriesPage() {
         e.preventDefault();
         //if index is the same as the LAST key in the map. NOT queryMap.size - 1. BECAUSE OF DELETE
         let afterIndex = index + 1;
-        while(afterIndex < queryMap.size && !queryMap.has(afterIndex)) {
-            afterIndex++;
-        }
-        if(afterIndex >= queryMap.size) {
+        const mapKeys = Array.from(queryMap.keys());
+        const lastKey = mapKeys[mapKeys.length - 1];
+        if(afterIndex >= lastKey) {
             alert("Cannot go further forward");
             return;
         }
+        while(afterIndex < lastKey && !queryMap.has(afterIndex)) {
+            afterIndex++;
+        }
         setIndex(prevIndex => {
             const newIndex = afterIndex;
-            setCurrentQuery(queryMap.get(newIndex));
+            //setCurrentQuery(queryMap.get(newIndex));
             return newIndex;
         });
     }
