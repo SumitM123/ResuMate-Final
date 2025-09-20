@@ -259,41 +259,73 @@ router.get('/getAllDocuments/:googleId', async (req, res) => {
     }
     return res.status(200).json({ success: true, pastQueries: listOfPastQueries, message: " Past queries found" });
 });
-
 router.get('/specificDocument/:googleId', async (req, res) => {
     const { googleId } = req.params;
     const { resumeURL, isOriginalResume } = req.query;
-    let tailName = "";
     let bucketName = "";
     if(isOriginalResume === 'false' || isOriginalResume === false) {
-        tailName = "parsedResumeToClient.pdf";
         bucketName = process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME;
     } else if (isOriginalResume === 'true' || isOriginalResume === true) {
-        tailName = "originalResumeToClient.pdf";
         bucketName = process.env.AWS_S3_BUCKET_ORIGINAL_RESUME;
-    } 
-    /*
-    c) When the user clicks on the element, create a GetObject request in which it'll provide the files associated
-               with the URLs and the job description
-            d) Send the files and the job description to the client as a blob
-            d) Display the files and the job description on the page <- This is done on the client side */
+    }
     if(!(await checkIfUserExists(googleId))) {
         return res.status(400).json({ success: false, message: 'User does not exist' });
     }
-    //objects with .body, and Content-Type
     let resumeStream;
     try {
         resumeStream = await s3Client.send(new GetObjectCommand({
-            bucket: bucketName,
-            key: resumeURL
+            Bucket: bucketName,
+            Key: resumeURL
         }));
     } catch (error) {
-        console.error("Error fetching resume from S3:", error);
+        console.error("Error fetching resume from S3:", error.message);
         return res.status(500).json({ success: false, message: 'Error fetching resume from S3', error });
     }
 
     res.setHeader('Content-Type', 'application/pdf');
+    resumeStream.Body.on('error', (err) => {
+        console.error("Stream error:", err);
+        res.destroy(err); // Only destroy, do not send another response
+    });
     resumeStream.Body.pipe(res);
+    return;
+});
+
+// router.get('/specificDocument/:googleId', async (req, res) => {
+//     const { googleId } = req.params;
+//     const { resumeURL, isOriginalResume } = req.query;
+//     let tailName = "";
+//     let bucketName = "";
+//     if(isOriginalResume === 'false' || isOriginalResume === false) {
+//         tailName = "parsedResumeToClient.pdf";
+//         bucketName = process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME;
+//     } else if (isOriginalResume === 'true' || isOriginalResume === true) {
+//         tailName = "originalResumeToClient.pdf";
+//         bucketName = process.env.AWS_S3_BUCKET_ORIGINAL_RESUME;
+//     } 
+//     /*
+//     c) When the user clicks on the element, create a GetObject request in which it'll provide the files associated
+//                with the URLs and the job description
+//             d) Send the files and the job description to the client as a blob
+//             d) Display the files and the job description on the page <- This is done on the client side */
+//     if(!(await checkIfUserExists(googleId))) {
+//         return res.status(400).json({ success: false, message: 'User does not exist' });
+//     }
+//     //objects with .body, and Content-Type
+//     let resumeStream;
+//     try {
+//         resumeStream = await s3Client.send(new GetObjectCommand({
+//             Bucket: bucketName,
+//             Key: resumeURL
+//         }));
+//     } catch (error) {
+//         console.error("Error fetching resume from S3:", error.message);
+//         return res.status(500).json({ success: false, message: 'Error fetching resume from S3', error });
+//     }
+
+//     res.setHeader('Content-Type', 'application/pdf');
+//     resumeStream.Body.pipe(res);
+//     return;
     // const writeDirectory = path.join(__dirname, '../lib/client');
     // await fs.writeFile(path.join(writeDirectory, tailName), resumeStream.Body).catch((err) => {
     //     console.error("Error writing resume file:", err);
@@ -312,7 +344,8 @@ router.get('/specificDocument/:googleId', async (req, res) => {
     //         console.error("Error deleting resume file:", err);
     //     }
     // });
-});
+//});
+
 // router.get('/specificDocument/:googleId', async (req, res) => {
 //     const { googleId } = req.params;
 //     const { parsedResumeURL} = req.query;
@@ -383,7 +416,7 @@ router.delete('/specificDocument/:googleId', async (req, res) => {
         for(let i = 0; i < document.pastQueries.length; i++) {
             const currentQuery = document.pastQueries[i];
             if(currentQuery.resume === originalResumeKey) {
-                document.pastQueries[i].deleteOne();
+                document.pastQueries[i].splice(1, 1);
                 break;
             }
         }

@@ -32,16 +32,17 @@ function AllPastQueriesPage() {
             console.error("Error fetching past queries:", error);
             return;
         }
+        console.log("All Queries:", JSON.stringify(allQueries.data.pastQueries));
+        const newMap = new Map();
         for(let i = 0; i < allQueries.data.pastQueries.length; i++) {
             const tempQuery = allQueries.data.pastQueries[i];
-            setQueryMap(prevMap => {
-                const newMap = new Map(prevMap);
-                newMap.set(i, tempQuery);
-                return newMap;
-            });
-            // Do something with each query object
+            newMap.set(i, tempQuery);
         }
-        setCurrentQuery(prevValue => queryMap.get(index));    
+        setQueryMap(newMap);
+        setCurrentQuery(newMap.get(index));   
+        console.log("Query Map:", queryMap);
+        console.log("Current Query:", currentQuery);
+        console.log("New map:", newMap);
     }
     const displayingAllQueries = () => {
         const queriesList = [];
@@ -99,61 +100,56 @@ function AllPastQueriesPage() {
             return newIndex;
         });
     }
-    const deleteClick = (e) => {
+    // a state setter function should ony be used to update the state and no side effects. Because all though the state may change async, the code inside it will me synchronously. 
+    //If one state is dependent on another, use the useEffect hook so that it updates the state whenever the other state is changed
+    // You never put a state changer function as async because then, it'll return a promise     const deleteClick = async (e) => {
+    const deleteClick = async (e) => {
         e.preventDefault();
         if(queryMap.size === 0) {
             alert("No queries to delete");
             return;
         }
-        setQueryMap(async (prevMap) => {
-            const newMap = new Map(prevMap);
-            newMap.delete(index);
-            let tempQuery = null;
-            if(newMap.size === 0) {
-                setCurrentQuery(null);
-                setIndex(0);
-                return newMap;
-            } else {
-                const tempIndex = index + 1;
-                //trying to display the next query
-                for(let i = tempIndex; i < newMap.size; i++) {
+        // Synchronously update the map
+        const newMap = new Map(queryMap);
+        newMap.delete(index);
+        let tempQuery = null;
+        if(newMap.size === 0) {
+            setCurrentQuery(null);
+            setIndex(0);
+        } else {
+            const tempIndex = index + 1;
+            for(let i = tempIndex; i < newMap.size; i++) {
+                if(newMap.has(i)) {
+                    setIndex(i);
+                    setCurrentQuery(newMap.get(i));
+                    tempQuery = newMap.get(i);
+                    break;
+                }
+            }
+            if(!tempQuery) {
+                for(let i = 0; i < tempIndex; i++) {
                     if(newMap.has(i)) {
-                        setIndex(prevValue => {
-                            let newValue = i;
-                            setCurrentQuery(newMap.get(newValue));
-                            tempQuery = newMap.get(newValue);
-                            return newValue;
-                        });
+                        setIndex(i);
+                        setCurrentQuery(newMap.get(i));
+                        tempQuery = newMap.get(i);
                         break;
                     }
                 }
-                if(!tempQuery) {
-                    for(let i = 0; i < tempIndex; i++) {
-                        if(newMap.has(i)) {
-                            setIndex(prevValue => {
-                            let newValue = i;
-                            setCurrentQuery(newMap.get(newValue));
-                            tempQuery = newMap.get(newValue);
-                            return newValue;
-                            });
-                            break;
-                        }
-                    }
-                }   
-            }
-            try {
-                await axios.delete(`/users/deleteDocument/${googleId}`, {
-                    data: { originalResumeKey: currentQuery.originalResumeKey,
-                            parsedResumeKey: currentQuery.parsedResumeKey
-                        }
-                });
-            } catch (error) {
-                console.error("Error deleting document:", error);
-            }
-            //const rerender = displayingAllQueries();
-            return newMap;
-        });
-    }
+            }   
+        }
+        setQueryMap(newMap); // <-- Synchronous update only
+
+        // Async delete after state update
+        try {
+            await axios.delete(`/users/deleteDocument/${googleId}`, {
+                data: { originalResumeKey: currentQuery.originalResumeKey,
+                        parsedResumeKey: currentQuery.parsedResumeKey
+                }
+            });
+        } catch (error) {
+            console.error("Error deleting document:", error);
+        }
+    };
     const backToApplication = (e) => { 
         e.preventDefault();
         navigate('/application')
@@ -175,8 +171,8 @@ function AllPastQueriesPage() {
                 {queryMap.size !== 0 ? (
                     <DisplayOnePastQuery 
                         googleId={googleId} 
-                        originalResumeURL={currentQuery?.originalResumeURL}
-                        parsedResumeURL={currentQuery?.parsedResumeURL}
+                        originalResumeURL={currentQuery?.originalResumeKey}
+                        parsedResumeURL={currentQuery?.parsedResumeKey}
                         jobDescription={currentQuery?.jobDescription} 
                     />
                 ) : (
