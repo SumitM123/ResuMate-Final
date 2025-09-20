@@ -278,7 +278,6 @@ router.get('/specificDocument/:googleId', async (req, res) => {
         console.error("Error fetching resume from S3:", error);
         return res.status(500).json({ success: false, message: 'Error fetching resume from S3', error });
     }
-
     const writeDirectory = path.join(__dirname, '../lib/client');
     await fs.writeFile(path.join(writeDirectory, tailName), resumeStream.Body).catch((err) => {
         console.error("Error writing resume file:", err);
