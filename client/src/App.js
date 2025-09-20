@@ -20,6 +20,7 @@ import FilesSend from './Pages/ApplicationPage/filesSending.jsx'
 import OutputPage from './Pages/OutputPage/OutputPage.jsx'
 import LoadingPage from './Pages/LoadingPage/LoadingPage.jsx'
 import { UserProvider } from './Components/context/UserContext.js';
+import AllPastQueriesPage from './Pages/AllPastQueriesPage/allPastQueriesBar.jsx';
 function App() {
   //Route is a component used to define a mapping between a specific URL path and the React component that should be rendered when the application's URL matches that path. 
     //basically, if the path is something, then render this component
@@ -31,8 +32,9 @@ function App() {
         <Route path="/signIn" element={<SignIn />} />
         <Route path='/application' element={<FilesSend/>}/>
         <Route path='/loadingPage' element={<LoadingPage/>}/>
+        <Route path="/signUp" element={<SignUp />} />
         <Route path='/outputPage' element={<OutputPage/>}/>
-        {/* <Route path="/application" element={<SignIn/>}/> */}
+        <Route path="/pastQueries" element={<AllPastQueriesPage/>}/>
       </Routes>
     </UserProvider>
   );
