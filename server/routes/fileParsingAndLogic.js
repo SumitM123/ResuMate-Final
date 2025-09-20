@@ -115,18 +115,14 @@ router.post(
       res.status(500).json({ success: false, error: err.message });
     }
     //Any code after the callback function will execute immediately. 
-    fs.unlink(path.join(uploadDir, req.file.filename), (err) => {
-      if (err) {
-        if (err.code === "ENOENT") {
-          console.warn("File not found, nothing to delete:", err.path);
-        } else {
-          console.error("Error deleting uploaded file:", err);
-        }
-        return;
+    await fs.unlink(path.join(uploadDir, req.file.filename)).catch((err) => {
+      if(err.code === "ENOENT") {
+        console.warn("File not found, nothing to delete:", err.path);
+      } else {
+        console.error("Error deleting uploaded file:", err);
       }
     });
-  }
-);
+});
 
 // router.post('/', upload.fields([
 //     {name: 'resume', maxCount: 1}
@@ -422,13 +418,28 @@ router.post("/convertToPDF", async (req, res) => {
   }
 
   await fs.unlink(path.join(outputDir, "temp.tex")).catch((err) => {
-    console.error("Error deleting temp.tex file:", err);
+    if(err.code === "ENOENT") {
+      console.warn("temp.tex file not found, nothing to delete:", err.path);
+      return;
+    } else {
+      console.error("Error deleting temp.tex file:", err);
+    }
   });
   await fs.unlink(path.join(outputDir, "temp.pdf")).catch((err) => {
-    console.error("Error deleting temp.pdf file:", err);
+    if(err.code === "ENOENT") {
+      console.warn("temp.pdf file not found, nothing to delete:", err.path);
+      return;
+    } else {
+      console.error("Error deleting temp.pdf file:", err);
+    }
   });
   await fs.unlink(path.join(outputDir, "temp.log")).catch((err) => {
-    console.error("Error deleting temp.log file:", err);
+    if(err.code === "ENOENT") {
+      console.warn("temp.log file not found, nothing to delete:", err.path);
+      return;
+    } else {
+      console.error("Error deleting temp.log file:", err);
+    }
   });
   //Write code to delete the temp files <DO THIS LATER>
 });

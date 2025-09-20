@@ -144,12 +144,22 @@ router.post('/uploadFiles',
             return res.status(500).json({ success: false, message: 'Error saving document to MongoDB' });
         }
 
-       await fs.unlink(pathToOriginalResume).catch((err) => {
-           console.error("Error deleting original resume file:", err);
-       });
-       await fs.unlink(pathToParsedResume).catch((err) => {
-           console.error("Error deleting parsed resume file:", err);
-       });
+        await fs.unlink(pathToOriginalResume).catch((err) => {
+            if(err.code === "ENOENT") {
+                console.warn("Original resume file not found, nothing to delete:", err.path);
+                return;
+            } else {
+                console.error("Error deleting original resume file:", err);
+            }
+        });
+        await fs.unlink(pathToParsedResume).catch((err) => {
+           if(err.code === "ENOENT") {
+               console.warn("Parsed resume file not found, nothing to delete:", err.path);
+               return;
+           } else {
+               console.error("Error deleting parsed resume file:", err);
+           }
+        });
 
        return res.status(200).json({ success: true, message: 'Files uploaded and document saved successfully' });
 });
@@ -258,15 +268,20 @@ router.get('/specificDocument/:googleId', async (req, res) => {
     }
 
     const writeDirectory = path.join(__dirname, '../lib/client');
-    fs.writeFileAsync(path.join(writeDirectory, 'originalResumeToClient.pdf'), originalResumeStream.Body);
+    await fs.writeFile(path.join(writeDirectory, 'originalResumeToClient.pdf'), originalResumeStream.Body).catch((err) => {
+        console.error("Error writing original resume file:", err);
+    });
     res.sendFile(path.join(writeDirectory, 'originalResumeToClient.pdf'), (err) => {
         if (err) {
             console.error("Error sending original resume file:", err);
             return res.status(500).json({ success: false, message: 'Error sending original resume file', error: err });
         }
     });
-    fs.unlink(path.join(writeDirectory, 'originalResumeToClient.pdf'), (err) => {
-        if (err) {
+    await fs.unlink(path.join(writeDirectory, 'originalResumeToClient.pdf')).catch((err) => {
+        if (err.code === "ENOENT") {
+            console.warn("Original resume file not found, nothing to delete:", err.path);
+            return;
+        } else {
             console.error("Error deleting original resume file:", err);
         }
     });
@@ -290,15 +305,20 @@ router.get('/specificDocument/:googleId', async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error fetching parsed resume from S3', error });
     }
     const writeDirectory = path.join(__dirname, '../lib/client');
-    fs.writeFileAsync(path.join(writeDirectory, 'parsedResumeToClient.pdf'), parsedResumeStream.Body);
+    await fs.writeFile(path.join(writeDirectory, 'parsedResumeToClient.pdf'), parsedResumeStream.Body).catch((err) => {
+        console.error("Error writing parsed resume file:", err);
+    });
     res.sendFile(path.join(writeDirectory, 'parsedResumeToClient.pdf'), (err) => {
         if (err) {
             console.error("Error sending parsed resume file:", err);
             return res.status(500).json({ success: false, message: 'Error sending parsed resume file', error: err });
         }
     });
-    fs.unlink(path.join(writeDirectory, 'parsedResumeToClient.pdf'), (err) => {
-        if (err) {
+    await fs.unlink(path.join(writeDirectory, 'parsedResumeToClient.pdf')).catch((err) => {
+        if( err.code === "ENOENT") {
+            console.warn("Parsed resume file not found, nothing to delete:", err.path);
+            return;
+        } else {
             console.error("Error deleting parsed resume file:", err);
         }
     });
