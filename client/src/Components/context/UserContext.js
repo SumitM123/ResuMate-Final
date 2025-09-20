@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 // Create the context object. This object DOESN'T HOLD DATA, but rather provides a way for components to publish and subcribe to data changes
 const UserContext = createContext();
 
@@ -18,7 +18,6 @@ export const useUser = () => {
 //UserProvider is where the state is managed, and any changes to that state lead to a new 'value' being passed down the context, updating the information available
 export const UserProvider = ({ children }) => {
   //the children prop represents whatever components are rendered between the opening and closing tags of the UserProvider component
-
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [jobDescription, setJobDescription] = useState('');
@@ -28,16 +27,16 @@ export const UserProvider = ({ children }) => {
   const [parsedResumeData, setParsedResumeData] = useState(null);
   //state for the output pdf
   const [pdfContent, setPdfContent] = useState(null); 
-
+  const navigate = useNavigate();
   const [latexContent, setLatexContent] = useState(null);
   // Check if user is already logged in (from localStorage). localStorage object is a built-in feature of modern web browswers. It allows web applications to store key-value pairs of data persistently within the user's brower
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
-  }, []);
+  // useEffect(() => {
+  //   const storedUser = localStorage.getItem('user');
+  //   if (storedUser) {
+  //     setUser(JSON.parse(storedUser));
+  //   }
+  //   setIsLoading(false);
+  // }, []);
 
   // Login function
   const login = (userData) => {
@@ -47,7 +46,15 @@ export const UserProvider = ({ children }) => {
 
   // Logout function
   const logout = () => {
+    navigate('/'); 
     setUser(null);
+    setIsLoading(true);
+    setJobDescription('');
+    setJobKeywords('');
+    setFile(null);
+    setParsedResumeData(null);
+    setPdfContent(null);
+    setLatexContent(null);
     localStorage.removeItem('user');
   };
 

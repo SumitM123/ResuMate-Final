@@ -47,7 +47,7 @@ function JobDescription() {
   const serverResponseJobDescription = async () => {
     const jobDescription = userInfo.jobDescription;
     try {
-      const response = await axios.post('/loadingPage/JobDescriptionKeyWord', {jobDescription}, {
+      const response = await axios.post('https://localhost:5000/loadingPage/JobDescriptionKeyWord', {jobDescription}, {
         headers: { 'Content-Type': 'application/json' }
       });
       return response;
@@ -76,7 +76,7 @@ function JobDescription() {
   }
   const handleClick = async (e) => {
     e.preventDefault();
-
+    navigate('/loadingPage');
     const fileError = checkFile();
     const jobError = checkJobDescription();
     console.log("File error: " + fileError);
@@ -248,7 +248,7 @@ function JobDescription() {
       return;
     }
 
-    navigate('/loadingPage');
+    // navigate('/loadingPage');
 /*
  Actual job description: 
  The Company
