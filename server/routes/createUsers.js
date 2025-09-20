@@ -55,7 +55,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-
+//WORKS
 router.post('/uploadFiles', 
     upload.fields([
         { name: 'originalResume', maxCount: 1 },
@@ -178,6 +178,8 @@ const createBucket = async (bucketName) => {
     await waitUntilBucketExists({ client: s3Client}, { Bucket: bucketName });
     console.log("Bucket created successfully");
 };
+
+//WORKS 
 const checkIfUserExists = async (googleId) => {
     let strGoogleId = googleId.toString();
     try {
@@ -192,6 +194,7 @@ const checkIfUserExists = async (googleId) => {
     }
 }
 
+//DOESN'T WORK
 router.get('/getAllDocuments/:googleId', async (req, res) => {
     const { googleId } = req.params;
     /*
@@ -246,7 +249,16 @@ router.get('/getAllDocuments/:googleId', async (req, res) => {
 
 router.get('/specificDocument/:googleId', async (req, res) => {
     const { googleId } = req.params;
-    const { originalResumeURL} = req.query;
+    const { resumeURL, isOriginalResume } = req.query;
+    let tailName = "";
+    let bucketName = "";
+    if(isOriginalResume === 'false' || isOriginalResume === false) {
+        tailName = "parsedResumeToClient.pdf";
+        bucketName = process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME;
+    } else if (isOriginalResume === 'true' || isOriginalResume === true) {
+        tailName = "originalResumeToClient.pdf";
+        bucketName = process.env.AWS_S3_BUCKET_ORIGINAL_RESUME;
+    } 
     /*
     c) When the user clicks on the element, create a GetObject request in which it'll provide the files associated
                with the URLs and the job description
@@ -256,77 +268,76 @@ router.get('/specificDocument/:googleId', async (req, res) => {
         return res.status(400).json({ success: false, message: 'User does not exist' });
     }
     //objects with .body, and Content-Type
-    let originalResumeStream;;
+    let resumeStream;
     try {
-        originalResumeStream = await s3Client.send(new GetObjectCommand({
-            bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
-            key: originalResumeURL
+        resumeStream = await s3Client.send(new GetObjectCommand({
+            bucket: bucketName,
+            key: resumeURL
         }));
     } catch (error) {
-        console.error("Error fetching original resume from S3:", error);
-        return res.status(500).json({ success: false, message: 'Error fetching original resume from S3', error });
+        console.error("Error fetching resume from S3:", error);
+        return res.status(500).json({ success: false, message: 'Error fetching resume from S3', error });
     }
 
     const writeDirectory = path.join(__dirname, '../lib/client');
-    await fs.writeFile(path.join(writeDirectory, 'originalResumeToClient.pdf'), originalResumeStream.Body).catch((err) => {
-        console.error("Error writing original resume file:", err);
+    await fs.writeFile(path.join(writeDirectory, tailName), resumeStream.Body).catch((err) => {
+        console.error("Error writing resume file:", err);
     });
-    res.sendFile(path.join(writeDirectory, 'originalResumeToClient.pdf'), (err) => {
+    res.sendFile(path.join(writeDirectory, tailName), (err) => {
         if (err) {
-            console.error("Error sending original resume file:", err);
-            return res.status(500).json({ success: false, message: 'Error sending original resume file', error: err });
+            console.error("Error sending resume file:", err);
+            return res.status(500).json({ success: false, message: 'Error sending resume file', error: err });
         }
     });
-    await fs.unlink(path.join(writeDirectory, 'originalResumeToClient.pdf')).catch((err) => {
+    await fs.unlink(path.join(writeDirectory, tailName)).catch((err) => {
         if (err.code === "ENOENT") {
-            console.warn("Original resume file not found, nothing to delete:", err.path);
+            console.warn("Resume file not found, nothing to delete:", err.path);
             return;
         } else {
-            console.error("Error deleting original resume file:", err);
-        }
-    });
-    
-});
-router.get('/specificDocument/:googleId', async (req, res) => {
-    const { googleId } = req.params;
-    const { parsedResumeURL} = req.query;
-     if(!(await checkIfUserExists(googleId))) {
-        return res.status(400).json({ success: false, message: 'User does not exist' });
-    }
-    //objects with .body, and Content-Type
-    let parsedResumeStream;
-     try {
-        parsedResumeStream = await s3Client.send(new GetObjectCommand({
-            bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
-            key: parsedResumeURL
-        }));
-    } catch (error) {
-        console.error("Error fetching parsed resume from S3:", error);
-        return res.status(500).json({ success: false, message: 'Error fetching parsed resume from S3', error });
-    }
-    const writeDirectory = path.join(__dirname, '../lib/client');
-    await fs.writeFile(path.join(writeDirectory, 'parsedResumeToClient.pdf'), parsedResumeStream.Body).catch((err) => {
-        console.error("Error writing parsed resume file:", err);
-    });
-    res.sendFile(path.join(writeDirectory, 'parsedResumeToClient.pdf'), (err) => {
-        if (err) {
-            console.error("Error sending parsed resume file:", err);
-            return res.status(500).json({ success: false, message: 'Error sending parsed resume file', error: err });
-        }
-    });
-    await fs.unlink(path.join(writeDirectory, 'parsedResumeToClient.pdf')).catch((err) => {
-        if( err.code === "ENOENT") {
-            console.warn("Parsed resume file not found, nothing to delete:", err.path);
-            return;
-        } else {
-            console.error("Error deleting parsed resume file:", err);
+            console.error("Error deleting resume file:", err);
         }
     });
 });
+// router.get('/specificDocument/:googleId', async (req, res) => {
+//     const { googleId } = req.params;
+//     const { parsedResumeURL} = req.query;
+//      if(!(await checkIfUserExists(googleId))) {
+//         return res.status(400).json({ success: false, message: 'User does not exist' });
+//     }
+//     //objects with .body, and Content-Type
+//     let parsedResumeStream;
+//      try {
+//         parsedResumeStream = await s3Client.send(new GetObjectCommand({
+//             bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
+//             key: parsedResumeURL
+//         }));
+//     } catch (error) {
+//         console.error("Error fetching parsed resume from S3:", error);
+//         return res.status(500).json({ success: false, message: 'Error fetching parsed resume from S3', error });
+//     }
+//     const writeDirectory = path.join(__dirname, '../lib/client');
+//     await fs.writeFile(path.join(writeDirectory, 'parsedResumeToClient.pdf'), parsedResumeStream.Body).catch((err) => {
+//         console.error("Error writing parsed resume file:", err);
+//     });
+//     res.sendFile(path.join(writeDirectory, 'parsedResumeToClient.pdf'), (err) => {
+//         if (err) {
+//             console.error("Error sending parsed resume file:", err);
+//             return res.status(500).json({ success: false, message: 'Error sending parsed resume file', error: err });
+//         }
+//     });
+//     await fs.unlink(path.join(writeDirectory, 'parsedResumeToClient.pdf')).catch((err) => {
+//         if( err.code === "ENOENT") {
+//             console.warn("Parsed resume file not found, nothing to delete:", err.path);
+//             return;
+//         } else {
+//             console.error("Error deleting parsed resume file:", err);
+//         }
+//     });
+// });
 
 router.delete('/specificDocument/:googleId', async (req, res) => {
     const { googleId } = req.params;
-    const { originalResumeKey } = req.body;
+    const { originalResumeKey } = req.query;
 
     if(!(await checkIfUserExists(googleId))) {
         return res.status(400).json({ success: false, message: 'User does not exist' });

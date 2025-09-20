@@ -21,9 +21,22 @@ function DisplayOnePastQuery(props) {
         funcCall();
     }, [googleId, originalResumeURL, parsedResumeURL]);
     const gettingRespectiveQueries = async () => {
-        const originalResumeStream = await axios.get(`/users/specificDocument/${googleId}?originalResumeURL=${originalResumeURL}`, { responseType: 'application/pdf' });
-        const parsedResumeStream = await axios.get(`/users/specificDocument/${googleId}?parsedResumeURL=${parsedResumeURL}`, { responseType: 'application/pdf' });
+        if(!googleId || !originalResumeURL || !parsedResumeURL) return;
+        //const originalResumeStream = await axios.get(`/users/specificDocument/${googleId}?originalResumeURL=${originalResumeURL}`, { responseType: 'application/pdf' });
+        //const parsedResumeStream = await axios.get(`/users/specificDocument/${googleId}?parsedResumeURL=${parsedResumeURL}`, { responseType: 'application/pdf' });
         
+        const originalResumeStream = await axios.get(`/users/specificDocument/${googleId}`, { 
+            params: {
+                resumeURL: originalResumeURL,
+                isOriginalResume: true
+            },
+            responseType: 'application/pdf' });
+        const parsedResumeStream = await axios.get(`/users/specificDocument/${googleId}`, {
+            params: {
+                parsedResumeURL: parsedResumeURL,
+                isOriginalResume: false
+            },
+            responseType: 'application/pdf' });
         const originalResumeFile = new File([originalResumeStream.data], 'originalResume.pdf', { type: 'application/pdf' });
         const parsedResumeFile = new File([parsedResumeStream.data], 'parsedResume.pdf', { type: 'application/pdf' });
         // Now you can use originalResumeFile and parsedResumeFile as needed

@@ -24,7 +24,7 @@ function AllPastQueriesPage() {
     const gettingDocuments = async () => {
         let allQueries;
         try {
-            allQueries = await axios.get(`/users/getAllDocments/${googleId}`);
+            allQueries = await axios.get(`/users/getAllDocuments/${googleId}`);
         } catch (error) {
             console.error("Error fetching past queries:", error);
             return;
