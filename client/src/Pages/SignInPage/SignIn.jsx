@@ -44,6 +44,16 @@ function SignInPage() {
         } catch (error) {
           console.error('Error adding user:', error);
         }
+        try{
+          const addingDocumentModel = await axios.post('/users/addingDocumentModel', {googleId: userData.data.googleId}, {
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          console.log('Document model addition response:', addingDocumentModel.data);
+        } catch (error) {
+          console.error('Error adding document model:', error);
+        }
       } else {
         console.error('No user data received from server');
       }

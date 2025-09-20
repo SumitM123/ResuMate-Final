@@ -143,12 +143,14 @@ function AllPastQueriesPage() {
             }
             try {
                 await axios.delete(`/users/deleteDocument/${googleId}`, {
-                    data: { originalResumeKey: currentQuery.originalResumeKey }
+                    data: { originalResumeKey: currentQuery.originalResumeKey,
+                            parsedResumeKey: currentQuery.parsedResumeKey
+                        }
                 });
             } catch (error) {
                 console.error("Error deleting document:", error);
             }
-            const rerender = displayingAllQueries();
+            //const rerender = displayingAllQueries();
             return newMap;
         });
     }

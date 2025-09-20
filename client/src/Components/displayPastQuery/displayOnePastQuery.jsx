@@ -49,10 +49,13 @@ function DisplayOnePastQuery(props) {
     return (
         <div>
             <h2>Past Queries</h2>
-            <img src={originalResumeURLToDisplay} alt="Original Resume" />
-            <img src={parsedResumeURLToDisplay} alt="Parsed Resume" />
+            {originalResumeURLToDisplay && (
+            <iframe src={originalResumeURLToDisplay} width="600" height="800" title="Original Resume" alt="Original Resume" />
+            )}
+            {parsedResumeURLToDisplay && (
+            <iframe src={parsedResumeURLToDisplay} width="600" height="800" title="Parsed Resume" alt="Parsed Resume" />
+            )}
             <p>Job Description: {jobDescription}</p>
-            {/* Code to display past queries will go here */}
         </div>
     );
 }
