@@ -144,16 +144,12 @@ router.post('/uploadFiles',
             return res.status(500).json({ success: false, message: 'Error saving document to MongoDB' });
         }
 
-       fs.unlink(pathToOriginalResume, (err) => {
-            if (err) {
-                console.error("Error deleting original resume file:", err);
-            }
-        });
-        fs.unlink(pathToParsedResume, (err) => {
-            if (err) {
-                console.error("Error deleting parsed resume file:", err);
-            }
-        }); 
+       await fs.unlink(pathToOriginalResume).catch((err) => {
+           console.error("Error deleting original resume file:", err);
+       });
+       await fs.unlink(pathToParsedResume).catch((err) => {
+           console.error("Error deleting parsed resume file:", err);
+       });
 
        return res.status(200).json({ success: true, message: 'Files uploaded and document saved successfully' });
 });
@@ -310,7 +306,7 @@ router.get('/specificDocument/:googleId', async (req, res) => {
 
 router.delete('/specificDocument/:googleId', async (req, res) => {
     const { googleId } = req.params;
-    const { originalResumeKeysumeKey } = req.body;
+    const { originalResumeKey } = req.body;
 
     if(!(await checkIfUserExists(googleId))) {
         return res.status(400).json({ success: false, message: 'User does not exist' });
@@ -353,5 +349,4 @@ router.delete('/specificDocument/:googleId', async (req, res) => {
     return res.status(200).json({ success: true, message: 'Document deleted successfully' });
     
 });
-// router.get('/')
 export default router;

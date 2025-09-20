@@ -1,11 +1,10 @@
-import { set } from "mongoose";
 import { useEffect } from "react";
 import { useState } from "react";
 import axios from "axios";
 import { useUser } from '../../Components/context/UserContext.js'
 import DisplayOnePastQuery from '../../Components/displayPastQuery/displayOnePastQuery.jsx'
 import { useNavigate } from "react-router-dom";
-function allPastQueriesPage() {
+function AllPastQueriesPage() {
     const userInfo = useUser();
     const navigate = useNavigate();
 
@@ -46,47 +45,59 @@ function allPastQueriesPage() {
         for (const [key, value] of queryMap) {
             const index = value.originalResumeKey.indexOf('-');
             const queryName = value.originalResumeKey.substring(0, index);
-            queriesList.push(<li onClick={(e) => queryClick(e, key)} key={key}>{queryName}</li>);
+            queriesList.push(<li onClick={(e) => queryClick(e)} value={key}>{queryName}</li>);
         }
         return <ul>{queriesList}</ul>;
     };
-    const queryClick = (e, key) => {
+    const queryClick = (e) => {
         e.preventDefault();
+        const key = parseInt(e.target.getAttribute("value"));
         setIndex(prevValue => {
-                    let newValue = key;
-                    setCurrentQuery(queryMap.get(newValue));
-                    return newValue;
-                }
-        )
-        setIndex(key);
-        setCurrentQuery(queryMap.get(key));
+            let newValue = key;
+            setCurrentQuery(queryMap.get(newValue));
+            return newValue;
+        });
     }
     const previousClick = (e) => {
         e.preventDefault();
-        if(index <=0) {
+        //if index is the same as the first key in the map. NOT 0. BECAUSE OF DELETE
+        let beforeIndex = index - 1;
+        while(beforeIndex >= 0 && !queryMap.has(beforeIndex)) {
+            beforeIndex--;
+        }
+        if(beforeIndex < 0) {
             alert("Cannot go further back");
             return;
         }
         setIndex(prevIndex => {
-            const newIndex = prevIndex - 1;
+            const newIndex = beforeIndex;
             setCurrentQuery(queryMap.get(newIndex));
             return newIndex;
         });
     }
     const nextClick = (e) => {
         e.preventDefault();
-        if(index >= queryMap.size - 1) {
+        //if index is the same as the LAST key in the map. NOT queryMap.size - 1. BECAUSE OF DELETE
+        let afterIndex = index + 1;
+        while(afterIndex < queryMap.size && !queryMap.has(afterIndex)) {
+            afterIndex++;
+        }
+        if(afterIndex >= queryMap.size) {
             alert("Cannot go further forward");
             return;
-        };
+        }
         setIndex(prevIndex => {
-            const newIndex = prevIndex + 1;
+            const newIndex = afterIndex;
             setCurrentQuery(queryMap.get(newIndex));
             return newIndex;
         });
     }
     const deleteClick = (e) => {
         e.preventDefault();
+        if(queryMap.size === 0) {
+            alert("No queries to delete");
+            return;
+        }
         setQueryMap(async (prevMap) => {
             const newMap = new Map(prevMap);
             newMap.delete(index);
@@ -100,17 +111,24 @@ function allPastQueriesPage() {
                 //trying to display the next query
                 for(let i = tempIndex; i < newMap.size; i++) {
                     if(newMap.has(i)) {
-                        setIndex(i);
-                        setCurrentQuery(newMap.get(i));
-                        tempQuery = newMap.get(i);
+                        setIndex(prevValue => {
+                            let newValue = i;
+                            setCurrentQuery(newMap.get(newValue));
+                            tempQuery = newMap.get(newValue);
+                            return newValue;
+                        });
                         break;
                     }
                 }
                 if(!tempQuery) {
                     for(let i = 0; i < tempIndex; i++) {
                         if(newMap.has(i)) {
-                            setIndex(i);
-                            setCurrentQuery(newMap.get(i));
+                            setIndex(prevValue => {
+                            let newValue = i;
+                            setCurrentQuery(newMap.get(newValue));
+                            tempQuery = newMap.get(newValue);
+                            return newValue;
+                            });
                             break;
                         }
                     }
@@ -124,13 +142,12 @@ function allPastQueriesPage() {
                 console.error("Error deleting document:", error);
             }
             const rerender = displayingAllQueries();
-            //MAKE A DELETE REQUEST TO BACK END TO DELETE FROM MONGODB AND S3
             return newMap;
         });
     }
     const backToApplication = (e) => { 
         e.preventDefault();
-        navigate('/applicationPage')
+        navigate('/application')
     }
     return (
         <>
@@ -146,7 +163,7 @@ function allPastQueriesPage() {
                 <button onClick={backToApplication}> Back to Application </button>
             </div>
             <div>
-                {currentQuery != null ? (
+                {queryMap.size !== 0 ? (
                     <DisplayOnePastQuery 
                         googleId={googleId} 
                         originalResumeURL={currentQuery?.originalResumeURL}
@@ -160,4 +177,4 @@ function allPastQueriesPage() {
         </>
     );
 }
-export default allPastQueriesPage;
+export default AllPastQueriesPage;

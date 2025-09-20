@@ -64,6 +64,7 @@ const upload = multer({ storage });
 
 //might have to combine the JSON extraction and job description extraction into 1
 
+//WORKS
 router.post(
   '/extractJSON',
   upload.single('resume'),
@@ -113,9 +114,14 @@ router.post(
       console.error("Error parsing uploading resume:", err);
       res.status(500).json({ success: false, error: err.message });
     }
+    //Any code after the callback function will execute immediately. 
     fs.unlink(path.join(uploadDir, req.file.filename), (err) => {
       if (err) {
-        console.error("Error deleting uploaded file:", err);
+        if (err.code === "ENOENT") {
+          console.warn("File not found, nothing to delete:", err.path);
+        } else {
+          console.error("Error deleting uploaded file:", err);
+        }
         return;
       }
     });
@@ -178,6 +184,7 @@ router.post(
 
 
 //this is to extract the keywords from the job description
+
 router.post('/JobDescriptionKeyWord', async (req, res) => { 
     //send formData to this shi where the body will have the job description
     // console.log("Here is the job description from the req object: " + req.body.jobDescription);
@@ -414,6 +421,15 @@ router.post("/convertToPDF", async (req, res) => {
     res.status(500).json({ error: "Failed to convert LaTeX to PDF" });
   }
 
+  await fs.unlink(path.join(outputDir, "temp.tex")).catch((err) => {
+    console.error("Error deleting temp.tex file:", err);
+  });
+  await fs.unlink(path.join(outputDir, "temp.pdf")).catch((err) => {
+    console.error("Error deleting temp.pdf file:", err);
+  });
+  await fs.unlink(path.join(outputDir, "temp.log")).catch((err) => {
+    console.error("Error deleting temp.log file:", err);
+  });
   //Write code to delete the temp files <DO THIS LATER>
 });
 
