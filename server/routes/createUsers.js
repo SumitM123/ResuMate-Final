@@ -3,7 +3,7 @@ import User from '../models/User.js'; // Adjust path as needed
 import mongoose from 'mongoose';
 import express from 'express';
 import DocumentModel from '../models/Documents.js';
-import {S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand, BucketAlreadyExists, CreateBucketCommand, waitUntilBucketExists} from '@aws-sdk/client-s3';
+import {S3Client, DeleteObjectCommand, PutObjectCommand, GetObjectCommand, BucketAlreadyExists, CreateBucketCommand, waitUntilBucketExists} from '@aws-sdk/client-s3';
 import multer from 'multer';
 import fs from 'fs';
 import path, { dirname } from 'path';
@@ -392,17 +392,18 @@ router.delete('/specificDocument/:googleId', async (req, res) => {
     }
     //detete the object from original resume bucket
     try {
-        await client.send(new DeleteObjectCommand({
+        await s3Client.send(new DeleteObjectCommand({
             Bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
             Key: originalResumeKey
         }));
+        
     } catch (error) {
         console.error("Error deleting original resume from S3:", error);
         return res.status(500).json({ success: false, message: 'Error deleting original resume from S3', error });
     }
     //delete the object from parsed resume bucket
     try {
-        await client.send(new DeleteObjectCommand({
+        await s3Client.send(new DeleteObjectCommand({
             Bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
             Key: parsedResumeKey
         }));
@@ -416,7 +417,7 @@ router.delete('/specificDocument/:googleId', async (req, res) => {
         for(let i = 0; i < document.pastQueries.length; i++) {
             const currentQuery = document.pastQueries[i];
             if(currentQuery.resume === originalResumeKey) {
-                document.pastQueries[i].splice(1, 1);
+                document.pastQueries.splice(i, 1);
                 break;
             }
         }
