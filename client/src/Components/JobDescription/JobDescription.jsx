@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './JobDescription.css';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 
 function JobDescription() {
@@ -37,14 +36,15 @@ function JobDescription() {
   const checkJobDescription = (e) => {
     const jobDescriptionSent = e.target.value;
     if (!jobDescriptionSent.trim()) {
-      jobDescriptionSend = "";
+      jobDescriptionSent = "";
     } 
     setJobDescriptionVal(jobDescriptionSent);
   };
   const serverResponseJobDescription = async () => {
     const jobDescription = jobDescriptionVal;
+    console.log("Sending job description to backend:", jobDescription);
     try {
-      const response = await axios.post('https://localhost:5000/loadingPage/JobDescriptionKeyWord', {jobDescription}, {
+      const response = await axios.post('http://localhost:5000/loadingPage/JobDescriptionKeyWord', {jobDescription}, {
         headers: { 'Content-Type': 'application/json' }
       });
       return response;
@@ -57,12 +57,11 @@ function JobDescription() {
     const sendToServer = new FormData();
     sendToServer.append('resume', fileUpload);
     try {
-      const serverResponse = await axios.post('/loadingPage/extractJSON', sendToServer,
+      const serverResponse = await axios.post('http://localhost:5000/loadingPage/extractJSON', sendToServer,
         {
           headers: { 'Content-Type': 'multipart/form-data' }
         }
       );
-      console.log("JSON has been extracted");
       return serverResponse;
     } catch (err) {
       return console.error("Upload failed:", err);
@@ -84,12 +83,12 @@ function JobDescription() {
     // UNCOMMENT BELOW WHEN EVERYTHING IS READY. BUT THIS IS WORKING FINE. DON'T WANT TO WASTE TOKENS
     try {
       const serverResponseJSON = await responseFromServerJSON();
-      console.log("Server Response Resume JSON: " + serverResponseJSON.data.parsedResume); //GOOD
+      //console.log("Server Response Resume JSON: " + serverResponseJSON.data.parsedResume); //GOOD
       // if (serverResponseJSON && serverResponseJSON.data && serverResponseJSON.data.parsedResume) {
       //   userInfo.setParsedResumeData(serverResponseJSON.data.parsedResume);
       // }
       userInfo.setParsedResumeData(serverResponseJSON.data.parsedResume);
-      console.log("Parsed Resume Data from context: " + userInfo.parsedResumeData);
+      //console.log("Parsed Resume Data from context: " + userInfo.parsedResumeData);
     } catch (err) {
       console.error("Error in getting the JSON extraction:", err);
       return;
@@ -176,7 +175,7 @@ Development experience with REST API development
             <h2>Paste Job Description</h2>
             <textarea
               value={jobDescriptionVal}
-              onChange={checkJobDescription(e)}
+              onChange={(e) => checkJobDescription(e)}
               placeholder="Paste the job description here..."
             />
           </div>
