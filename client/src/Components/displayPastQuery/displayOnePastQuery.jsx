@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import './displayOnePastQuery.css';
 
 function DisplayOnePastQuery({ googleId, originalResumeURL, parsedResumeURL, jobDescription }) {
     const [originalResumeURLToDisplay, setOriginalResumeURLToDisplay] = useState(null);
@@ -32,15 +33,55 @@ function DisplayOnePastQuery({ googleId, originalResumeURL, parsedResumeURL, job
     }, [googleId, originalResumeURL, parsedResumeURL]);
 
     return (
-        <div>
-            <h2>Past Queries</h2>
-            {originalResumeURLToDisplay && (
-                <iframe src={originalResumeURLToDisplay} width="600" height="800" title="Original Resume" />
-            )}
-            {parsedResumeURLToDisplay && (
-                <iframe src={parsedResumeURLToDisplay} width="600" height="800" title="Parsed Resume" />
-            )}
-            <p>Job Description: {jobDescription}</p>
+        <div className="past-query-container">
+            <h2 className="past-query-title">Past Query Details</h2>
+            
+            <div className="resume-viewer-container">
+                {originalResumeURLToDisplay ? (
+                    <div className="resume-section">
+                        <h3>Original Resume</h3>
+                        <iframe 
+                            src={originalResumeURLToDisplay} 
+                            className="resume-iframe" 
+                            title="Original Resume" 
+                        />
+                    </div>
+                ) : (
+                    <div className="resume-section">
+                        <h3>Original Resume</h3>
+                        <div className="loading-message">
+                            <div className="spinner"></div>
+                            Loading original resume...
+                        </div>
+                    </div>
+                )}
+                
+                {parsedResumeURLToDisplay ? (
+                    <div className="resume-section">
+                        <h3>Enhanced Resume</h3>
+                        <iframe 
+                            src={parsedResumeURLToDisplay} 
+                            className="resume-iframe" 
+                            title="Enhanced Resume" 
+                        />
+                    </div>
+                ) : (
+                    <div className="resume-section">
+                        <h3>Enhanced Resume</h3>
+                        <div className="loading-message">
+                            <div className="spinner"></div>
+                            Loading enhanced resume...
+                        </div>
+                    </div>
+                )}
+            </div>
+            
+            <div className="job-description-section">
+                <h3 className="job-description-title">Job Description</h3>
+                <div className="job-description-content">
+                    {jobDescription || 'No job description available'}
+                </div>
+            </div>
         </div>
     );
 }

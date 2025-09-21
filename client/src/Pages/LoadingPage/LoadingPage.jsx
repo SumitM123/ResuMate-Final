@@ -2,6 +2,7 @@ import react, {useEffect, useState} from 'react'
 import axios from 'axios';
 import { useUser } from '../../Components/context/UserContext.js'    // Navigate to the output page with the PDF and LaTeX content
 import { useNavigate } from 'react-router-dom';
+import './LoadingPage.css';
 
 //Hooks much be called inside functional components or custom hook functions. BUt the code inside the hooks runs based on the specifics
 
@@ -170,9 +171,42 @@ useEffect(
 
 
   return (
-    <div style={styles.container}>
-      <div style={styles.spinner}></div>
-      <h2 style={styles.text}>Loading, please wait...</h2>
+    <div className="loading-container">
+      <div className="loading-card">
+        <div className="loading-spinner"></div>
+        
+        <h2 className="loading-title">Enhancing Your Resume</h2>
+        <p className="loading-subtitle">
+          We're analyzing your resume and job description to create the perfect match
+        </p>
+        
+        <div className="progress-bar">
+          <div className="progress-fill" style={{ width: '60%' }}></div>
+        </div>
+        
+        <div className="loading-steps">
+          <div className="loading-step completed">
+            <span className="loading-step-icon">✓</span>
+            Parsing your resume
+          </div>
+          <div className="loading-step active">
+            <span className="loading-step-icon">⚙️</span>
+            Analyzing job requirements
+          </div>
+          <div className="loading-step">
+            <span className="loading-step-icon">⏳</span>
+            Optimizing content
+          </div>
+          <div className="loading-step">
+            <span className="loading-step-icon">⏳</span>
+            Generating enhanced resume
+          </div>
+        </div>
+        
+        <div className="loading-tip">
+          <strong>Pro Tip:</strong> While you wait, make sure your LinkedIn profile is up to date and matches your resume!
+        </div>
+      </div>
     </div>
   );
 }

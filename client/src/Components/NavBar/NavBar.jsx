@@ -11,41 +11,65 @@ function NavBar() {
   };
   
   return (
-    <nav>
-      <ul>
-        <li><Link to="/">Home</Link></li>
-        {isAuthenticated ? (
-          <li style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img 
-              src={user.picture} 
-              alt={user.name}
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                cursor: 'pointer'
-              }}
-              title={user.name}
-            />
-            <button 
-              onClick={handleLogout}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'inherit',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                color: 'white',
-                fontSize: '18px'
-              }}
-            >
-              Logout
-            </button>
-          </li>
-        ) : (
-          <li><Link to="/signIn">Sign In</Link></li>
-        )}
-      </ul>
+    <nav className="navbar">
+      <div className="navbar-container">
+        <div className="navbar-brand">
+          <Link to="/" className="brand-link">
+            <span className="brand-icon">📄</span>
+            <span className="brand-text">ResuMate</span>
+          </Link>
+        </div>
+        
+        <div className="navbar-menu">
+          <div className="navbar-nav">
+            {/* <Link to="/" className="nav-link">
+              <span className="nav-icon">🏠</span>
+              Home
+            </Link> */}
+            
+            {isAuthenticated && (
+              <>
+                <Link to="/application" className="nav-link">
+                  <span className="nav-icon">⚡</span>
+                  Application
+                </Link>
+                <Link to="/pastQueries" className="nav-link">
+                  <span className="nav-icon">📋</span>
+                  Past Queries
+                </Link>
+              </>
+            )}
+          </div>
+          
+          {/* Right-aligned authentication section */}
+          {isAuthenticated ? (
+            <div className="user-menu">
+              <div className="user-profile">
+                <img 
+                  src={user.picture} 
+                  alt={user.name}
+                  className="user-avatar"
+                  title={user.name}
+                />
+                <span className="user-name">{user.name}</span>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="logout-button"
+                title="Logout"
+              >
+                <span className="logout-icon">🚪</span>
+                Logout
+              </button>
+            </div>
+          ) : (
+            <Link to="/signIn" className="nav-link">
+              <span className="nav-icon">🔐</span>
+              Sign In
+            </Link>
+          )}
+        </div>
+      </div>
     </nav>
   );
 }

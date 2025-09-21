@@ -4,6 +4,7 @@ import axios from "axios";
 import { useUser } from '../../Components/context/UserContext.js'
 import DisplayOnePastQuery from '../../Components/displayPastQuery/displayOnePastQuery.jsx'
 import { useNavigate } from "react-router-dom";
+import './allPastQueriesBar.css';
 function AllPastQueriesPage() {
     const userInfo = useUser();
     const navigate = useNavigate();
@@ -49,9 +50,18 @@ function AllPastQueriesPage() {
         for (const [key, value] of queryMap) {
             const index = value.originalResumeKey.indexOf('-');
             const queryName = value.originalResumeKey.substring(0, index);
-            queriesList.push(<button onClick={(e) => queryClick(e)} key={key} value={key}>{queryName}</button>);
+            queriesList.push(
+                <button 
+                    className="query-button" 
+                    onClick={(e) => queryClick(e)} 
+                    key={key} 
+                    value={key}
+                >
+                    {queryName}
+                </button>
+            );
         }
-        return <ul>{queriesList}</ul>;
+        return <ul className="queries-list">{queriesList}</ul>;
     };
     const queryClick = (e, key) => {
         e.preventDefault();
@@ -154,20 +164,34 @@ function AllPastQueriesPage() {
         e.preventDefault();
         navigate('/application')
     }
+    //REMOVE THE NEXT AND PREVIOUS BUTTONS LOL
     return (
-        <>
-        
-            <div>
-                <h2> Past Queries Bar </h2>
+        <div className="all-queries-container">
+            <div className="queries-header">
+                <h1 className="queries-title">Resume Query History</h1>
+            </div>
+            
+            <div className="queries-sidebar">
+                <h2>Your Past Queries</h2>
                 {displayingAllQueries()}
             </div>
-            <div>
-                <button onClick={previousClick}> Previous </button>
-                <button onClick={nextClick}> Next </button>
-                <button onClick={deleteClick}> Delete </button>
-                <button onClick={backToApplication}> Back to Application </button>
+            
+            <div className="navigation-controls">
+                <button className="nav-button previous" onClick={previousClick}>
+                    ← Previous
+                </button>
+                <button className="nav-button next" onClick={nextClick}>
+                    Next →
+                </button>
+                <button className="nav-button delete" onClick={deleteClick}>
+                    🗑️ Delete
+                </button>
+                <button className="nav-button back" onClick={backToApplication}>
+                    ← Back to Application
+                </button>
             </div>
-            <div>
+            
+            <div className="query-content">
                 {queryMap.size !== 0 ? (
                     <DisplayOnePastQuery 
                         googleId={googleId} 
@@ -176,10 +200,13 @@ function AllPastQueriesPage() {
                         jobDescription={currentQuery?.jobDescription} 
                     />
                 ) : (
-                    <h2>No Past Queries</h2>
+                    <div className="no-queries-message">
+                        No Past Queries Available
+                        <p>Start by creating your first resume query!</p>
+                    </div>
                 )}
             </div>
-        </>
+        </div>
     );
 }
 export default AllPastQueriesPage;
