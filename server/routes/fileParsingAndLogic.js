@@ -420,23 +420,23 @@ router.post("/convertToPDF", async (req, res) => {
   await fs.unlink(path.join(outputDir, "temp.tex")).catch((err) => {
     if(err.code === "ENOENT") {
       console.warn("temp.tex file not found, nothing to delete:", err.path);
-      return;
+      //return;
     } else {
       console.error("Error deleting temp.tex file:", err);
     }
   });
-  await fs.unlink(path.join(outputDir, "temp.pdf")).catch((err) => {
-    if(err.code === "ENOENT") {
-      console.warn("temp.pdf file not found, nothing to delete:", err.path);
-      return;
-    } else {
-      console.error("Error deleting temp.pdf file:", err);
-    }
-  });
+  // await fs.unlink(path.join(outputDir, "temp.pdf")).catch((err) => {
+  //   if(err.code === "ENOENT") {
+  //     console.warn("temp.pdf file not found, nothing to delete:", err.path);
+  //     //return;
+  //   } else {
+  //     console.error("Error deleting temp.pdf file:", err);
+  //   }
+  // });
   await fs.unlink(path.join(outputDir, "temp.log")).catch((err) => {
     if(err.code === "ENOENT") {
       console.warn("temp.log file not found, nothing to delete:", err.path);
-      return;
+      //return;
     } else {
       console.error("Error deleting temp.log file:", err);
     }

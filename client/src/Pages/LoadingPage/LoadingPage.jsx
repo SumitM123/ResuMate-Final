@@ -109,9 +109,14 @@ function LoadingPage() {
 //Might have to fix this so that it's a callback that calls an async function
 useEffect(
   () => {
+    if(!userInfo.parsedResumeData || !userInfo.jobkeywords) {
+      return;
+    }
     const functionCall = async () => {
       const resumeData = userInfo.parsedResumeData;
       const jobDescriptionKeywords = userInfo.jobkeywords;
+      console.log("Resume Data in Loading Page:", resumeData);
+      console.log("Job Description Keywords in Loading Page:", jobDescriptionKeywords);
       let responseTex;
       // Send resume + keywords to backend so keywords can be integrated into resume
       try {
@@ -165,7 +170,7 @@ useEffect(
       }
     }
     functionCall();
-  }, []);
+  }, [userInfo.parsedResumeData, userInfo.jobkeywords]);
 
   
 
