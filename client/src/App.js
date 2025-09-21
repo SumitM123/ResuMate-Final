@@ -32,7 +32,7 @@ function App() {
         <Route path="/signIn" element={<SignIn />} />
         <Route path='/application' element={<FilesSend/>}/>
         <Route path='/loadingPage' element={<LoadingPage/>}/>
-        <Route path="/signUp" element={<SignUp />} />
+        {/* <Route path="/signUp" element={<SignUp />} /> */}
         <Route path='/outputPage' element={<OutputPage/>}/>
         <Route path="/pastQueries" element={<AllPastQueriesPage/>}/>
       </Routes>

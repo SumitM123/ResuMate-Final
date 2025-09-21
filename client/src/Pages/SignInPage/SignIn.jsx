@@ -3,6 +3,7 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../Components/context/UserContext';
+import './SignIn.css';
 
 
 function SignInPage() {
@@ -65,22 +66,27 @@ function SignInPage() {
   };
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: 'linear-gradient(to right, #ece9e6, #ffffff)', // soft gradient
-        flexDirection: 'column',
-        fontFamily: 'Arial, sans-serif'
-      }}>
-        <GoogleLogin
-          onSuccess={handleSuccess}
-          onError={() => console.log('Login Failed')}
-          theme="outline"
-          size="large"
-          width="300"
-        />
+      <div className="signin-container">
+        <div className="signin-card">
+          <h1 className="signin-title">Welcome to ResuMate</h1>
+          <p className="signin-subtitle">
+            Sign in to create enhanced resumes tailored to your job applications
+          </p>
+          
+          <div className="google-login-wrapper">
+            <GoogleLogin
+              onSuccess={handleSuccess}
+              onError={() => console.log('Login Failed')}
+              theme="outline"
+              size="large"
+              width="300"
+            />
+          </div>
+          
+          {/* <div className="signin-footer">
+            <p>Don't have an account? <a href="/signUp">Sign up here</a></p>
+          </div> */}
+        </div>
       </div>
     </GoogleOAuthProvider>
   );

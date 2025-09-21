@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useUser } from '../../Components/context/UserContext.js';
+import './OutputPage.css';
 function OutputPage() {
   const location = useLocation();
   const pdfUrl = location.state?.pdfUrl;
@@ -50,32 +51,53 @@ function OutputPage() {
     uploadFiles();
   }, [pdfUrl]);
   return (
-    <div style={{ textAlign: 'center', marginTop: '40px' }}>
-      <h2>Your Resume PDF is Ready!</h2>
-      <button
-        onClick={handleDownload}
-        style={{
-          padding: '12px 32px',
-          fontSize: '1.2rem',
-          background: '#007bff',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: 'pointer'
-        }}
-      >
-        Download PDF
-      </button>
-      <div style={{ marginTop: '32px' }}>
-        {pdfUrl && (
+    <div className="output-page-container">
+      <div className="output-header">
+        <h2 className="output-title">Your Resume PDF is Ready!</h2>
+        <div className="success-message">
+          Your enhanced resume has been successfully generated and is ready for download!
+        </div>
+      </div>
+      
+      <div className="download-section">
+        <button className="download-button" onClick={handleDownload}>
+          Download PDF
+        </button>
+      </div>
+      
+      <div className="pdf-preview-section">
+        <h3 className="preview-title">Resume Preview</h3>
+        {pdfUrl ? (
           <iframe
             src={pdfUrl}
             title="Resume PDF Preview"
-            width="80%"
-            height="600px"
-            style={{ border: '1px solid #ccc', borderRadius: '8px' }}
+            className="pdf-iframe"
           />
+        ) : (
+          <div className="loading-preview">
+            <div className="preview-spinner"></div>
+            Loading preview...
+          </div>
         )}
+        
+        <div className="actions-section">
+          <button className="action-button primary" onClick={handleDownload}>
+            ⬇️ Download Again
+          </button>
+          <button className="action-button secondary" onClick={() => window.print()}>
+            🖨️ Print Resume
+          </button>
+        </div>
+        
+        <div className="tips-section">
+          <h4 className="tips-title">Next Steps</h4>
+          <ul className="tips-list">
+            <li>Review your enhanced resume carefully before applying</li>
+            <li>Customize it further for specific job applications</li>
+            <li>Keep the original version as a backup</li>
+            <li>Update your LinkedIn profile to match</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
