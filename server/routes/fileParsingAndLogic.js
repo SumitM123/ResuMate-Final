@@ -40,7 +40,7 @@ const googleGeminiVision = new ChatGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-const gorq = new ChatGroq({
+const groq = new ChatGroq({
   model: "llama-3.3-70b-versatile",
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -183,8 +183,8 @@ router.post(
 
 router.post('/JobDescriptionKeyWord', async (req, res) => { 
     //send formData to this shi where the body will have the job description
-    // console.log("Here is the job description from the req object: " + req.body.jobDescription);
-    // console.log("The job description that's not in the body: " + req.jobDescription);
+    console.log("Here is the job description from the req object: " + req.body.jobDescription);
+    console.log("The job description that's not in the body: " + req.jobDescription);
     try {
         const messages = [
             new SystemMessage("You are an expert job description analyzer. Extract the most relevant keywords that a candidate should have on their resume to match this job posting."),
@@ -202,7 +202,7 @@ router.post('/JobDescriptionKeyWord', async (req, res) => {
             })
         ];
 
-        const response = await gorq.invoke(messages);
+        const response = await groq.invoke(messages);
         console.log('Job description keywords extracted:', response.content);
         
         res.status(200).json({
@@ -295,7 +295,7 @@ router.post('/editResume', async (req, res) => {
     const prompt2 = ChatPromptTemplate.fromMessages(message2);
     
     const chain1 = prompt1.pipe(googleGemini);
-    const chain2 = prompt2.pipe(gorq);
+    const chain2 = prompt2.pipe(groq);
 
     const fullChain = RunnableSequence.from([
       chain1,
