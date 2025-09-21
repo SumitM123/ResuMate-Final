@@ -141,7 +141,7 @@ router.post('/uploadFiles',
         await fs.unlink(pathToOriginalResume).catch((err) => {
             if(err.code === "ENOENT") {
                 console.warn("Original resume file not found, nothing to delete:", err.path);
-                return;
+                //return;
             } else {
                 console.error("Error deleting original resume file:", err);
             }
@@ -149,7 +149,7 @@ router.post('/uploadFiles',
         await fs.unlink(pathToParsedResume).catch((err) => {
            if(err.code === "ENOENT") {
                console.warn("Parsed resume file not found, nothing to delete:", err.path);
-               return;
+               //return;
            } else {
                console.error("Error deleting parsed resume file:", err);
            }
