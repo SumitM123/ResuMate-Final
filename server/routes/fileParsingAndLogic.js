@@ -46,7 +46,7 @@ const groq = new ChatGroq({
 });
 
 const openAI = new ChatOpenAI({
-  model: "gpt-4.1-mini",
+  model: "gpt-4",
   apiKey: process.env.OPENAI_KEY,
 });
 
@@ -332,11 +332,26 @@ router.put('/changeToLaTeX', async (req, res) => {
 
               You will always follow these rules:
               1. Use the provided LaTeX template exactly as given — do not alter formatting, commands, spacing, or section order.
-              2. Replace each placeholder or tag in the template with the corresponding value from the user's JSON.
-              3. If a placeholder's value is missing in the JSON, leave it empty but keep the placeholder's LaTeX structure intact.
-              4. Escape special LaTeX characters in user-provided text: %, $, _, &, #, {, }.
-              5. Return **only** the completed LaTeX code — no comments, no explanations, no extra formatting outside of LaTeX.
-              6. ENSURE THE FINAL LaTeX COMPILES WITHOUT ERRORS. THIS IS ESSENTIAL.
+              2. Replace each placeholder or tag in the template with the corresponding value from the user's JSON. If the corresponding section is missing from the 
+                  JSON, delete that section when providing the output LaTeX code. 
+                  For example: Since there is a relevant coursework section in the template structure, but if the JSON resume does not have the Coursework section, or anything related to that matter, delete it. 
+                  So the following LaTeX code below would be removed entirely. And keep this rule for all the sections that are present inside the template. 
+                  \section{Relevant Coursework}
+                  \begin{multicols}{4}
+                      \begin{itemize}[itemsep=-5pt, parsep=3pt]
+                          \item Course 1
+                          \item Course 2
+                          \item Course 3
+                          \item Course 4
+                          \item Course 5
+                          \item Course 6
+                          \item Course 7
+                          \item Course 8
+                      \end{itemize}
+                  \end{multicols}
+              3. Escape special LaTeX characters in user-provided text: %, $, _, &, #, {, }.
+              4. Return **only** the completed LaTeX code — no explanations, no extra formatting outside of LaTeX.
+              5. ENSURE THE FINAL LaTeX COMPILES WITHOUT ERRORS. THIS IS ESSENTIAL.
 
                **IMPORTANT:** Do NOT include any code block markers such as triple backticks, 'latex', or any markdown formatting. For example, do NOT return:
                 [code block] 
@@ -349,6 +364,9 @@ router.put('/changeToLaTeX', async (req, res) => {
                 TEMPLATE START:
                   ${latexTemplate}
                 TEMPLATE END
+              
+
+                Also, ENSURE THAT THE LATEX CODE IS COMPLETE AND CAN BE COMPILED WITHOUT ERRORS. THIS IS CRUCIAL.
             `
     }),
     new HumanMessage({
@@ -358,14 +376,46 @@ router.put('/changeToLaTeX', async (req, res) => {
     })
   ];
   let latexResponse = "";
+  const cleanLatex = (latex) => {
+    // Remove code block markers
+    latex = latex.replace(/```latex|```/g, '');
+
+    // Remove empty list environments (itemize, enumerate, description)
+    latex = latex.replace(/\\begin\{(itemize|enumerate|description)\}[\s\n]*?\\end\{\1\}/g, '');
+
+    // Remove empty \section{} or \subsection{} headers
+    latex = latex.replace(/\\section\{[ \t]*\}\s*/g, '');
+    latex = latex.replace(/\\subsection\{[ \t]*\}\s*/g, '');
+
+    // Remove any stray empty \item lines
+    latex = latex.replace(/\\item\s*(?=(\\item|\\end\{))/g, '');
+
+    // Remove \item with only whitespace or no content
+    latex = latex.replace(/\\item\s*[\n\r]+/g, '');
+
+    // Collapse too many blank lines
+    latex = latex.replace(/\n{3,}/g, '\n\n');
+
+    // Remove lines with only LaTeX commands and no content (e.g., \item, \section{})
+    latex = latex.replace(/^(\\[a-zA-Z]+)\s*$/gm, '');
+
+    // Remove unmatched closing braces at the end of the file
+    latex = latex.replace(/^\s*}\s*$/gm, '');
+
+    // Optionally, check for balanced braces (rudimentary)
+    const openBraces = (latex.match(/{/g) || []).length;
+    const closeBraces = (latex.match(/}/g) || []).length;
+    if (openBraces !== closeBraces) {
+      console.warn('Warning: Unmatched braces in LaTeX code.');
+      // Optionally, try to fix by adding missing braces (not recommended for production)
+      // latex += '}'.repeat(openBraces - closeBraces);
+    }
+
+    return latex.trim();
+  }
   try {
-    latexResponse = await googleGemini.invoke(message);
-    // let firstChar = latexResponse.content.indexOf('%');
-    // if(firstChar > 0) {
-    //   latexResponse.content = latexResponse.content.slice(firstChar);
-    //   latexResponse.content = latexResponse.content.substr(0, latexResponse.content.length - 3);
-    // }
-    latexResponse.content = latexResponse.content.replace(/```latex|```/g, '');
+    latexResponse = await openAI.invoke(message);
+    latexResponse.content = cleanLatex(latexResponse.content);
     console.log("LaTeX resume formatted backend:", latexResponse.content);
     res.status(200).json({
         success: true,
@@ -387,6 +437,7 @@ router.post("/convertToPDF", async (req, res) => {
   try {
     await fs.mkdir(outputDir, { recursive: true }); // Ensure output directory exists
     const tempFile = path.join(outputDir, "temp.tex");
+
     await fs.writeFile(tempFile, latexContent);
 
     const pdfBuffer = await new Promise((resolve, reject) => {
@@ -420,28 +471,24 @@ router.post("/convertToPDF", async (req, res) => {
   await fs.unlink(path.join(outputDir, "temp.tex")).catch((err) => {
     if(err.code === "ENOENT") {
       console.warn("temp.tex file not found, nothing to delete:", err.path);
-      //return;
     } else {
       console.error("Error deleting temp.tex file:", err);
     }
   });
-  // await fs.unlink(path.join(outputDir, "temp.pdf")).catch((err) => {
-  //   if(err.code === "ENOENT") {
-  //     console.warn("temp.pdf file not found, nothing to delete:", err.path);
-  //     //return;
-  //   } else {
-  //     console.error("Error deleting temp.pdf file:", err);
-  //   }
-  // });
+  await fs.unlink(path.join(outputDir, "temp.pdf")).catch((err) => {
+    if(err.code === "ENOENT") {
+      console.warn("temp.pdf file not found, nothing to delete:", err.path);
+    } else {
+      console.error("Error deleting temp.pdf file:", err);
+    }
+  });
   await fs.unlink(path.join(outputDir, "temp.log")).catch((err) => {
     if(err.code === "ENOENT") {
       console.warn("temp.log file not found, nothing to delete:", err.path);
-      //return;
     } else {
       console.error("Error deleting temp.log file:", err);
     }
   });
-  //Write code to delete the temp files <DO THIS LATER>
 });
 
 export default router;
