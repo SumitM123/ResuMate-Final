@@ -115,52 +115,37 @@ function AllPastQueriesPage() {
     // You never put a state changer function as async because then, it'll return a promise     const deleteClick = async (e) => {
     const deleteClick = async (e) => {
         e.preventDefault();
-        if(queryMap.size === 0) {
-            alert("No queries to delete");
-            return;
-        }
-        // Synchronously update the map
-        const newMap = new Map(queryMap);
-        newMap.delete(index);
-        let tempQuery = null;
-        if(newMap.size === 0) {
-            setCurrentQuery(null);
-            setIndex(0);
-        } else {
-            const tempIndex = index + 1;
-            for(let i = tempIndex; i < newMap.size; i++) {
-                if(newMap.has(i)) {
-                    setIndex(i);
-                    setCurrentQuery(newMap.get(i));
-                    tempQuery = newMap.get(i);
-                    break;
-                }
-            }
-            if(!tempQuery) {
-                for(let i = 0; i < tempIndex; i++) {
-                    if(newMap.has(i)) {
-                        setIndex(i);
-                        setCurrentQuery(newMap.get(i));
-                        tempQuery = newMap.get(i);
-                        break;
-                    }
-                }
-            }   
-        }
-        setQueryMap(newMap); // <-- Synchronous update only
+        if (!currentQuery) return alert("No query selected");
 
-        // Async delete after state update
         try {
-            await axios.delete(`/users/deleteDocument/${googleId}`, {
-                data: { originalResumeKey: currentQuery.originalResumeKey,
-                        parsedResumeKey: currentQuery.parsedResumeKey
+            await axios.delete(`/users/specificDocument/${googleId}`, {
+                data: {
+                    originalResumeKey: currentQuery.originalResumeKey,
+                    parsedResumeKey: currentQuery.parsedResumeKey
                 }
             });
-            await gettingDocuments(); 
+
+            // Update state only after server confirms deletion
+            const newMap = new Map(queryMap);
+            newMap.delete(index);
+            setQueryMap(newMap);
+
+            // Update currentQuery
+            const remainingKeys = Array.from(newMap.keys());
+            if (remainingKeys.length === 0) {
+                setCurrentQuery(null);
+                setIndex(0);
+            } else {
+                const nextIndex = remainingKeys.find(i => i > index) ?? remainingKeys[remainingKeys.length - 1];
+                setIndex(nextIndex);
+                setCurrentQuery(newMap.get(nextIndex));
+            }
         } catch (error) {
             console.error("Error deleting document:", error);
+            alert("Failed to delete document. See console for details.");
         }
     };
+
     const backToApplication = (e) => { 
         e.preventDefault();
         navigate('/application')

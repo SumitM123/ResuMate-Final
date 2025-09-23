@@ -385,48 +385,34 @@ router.get('/specificDocument/:googleId', async (req, res) => {
 
 router.delete('/specificDocument/:googleId', async (req, res) => {
     const { googleId } = req.params;
-    const { originalResumeKey } = req.query;
-    const { parsedResumeKey } = req.query;
-    if(!(await checkIfUserExists(googleId))) {
-        return res.status(400).json({ success: false, message: 'User does not exist' });
-    }
-    //detete the object from original resume bucket
-    try {
-        await s3Client.send(new DeleteObjectCommand({
-            Bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
-            Key: originalResumeKey
-        }));
-        
-    } catch (error) {
-        console.error("Error deleting original resume from S3:", error);
-        return res.status(500).json({ success: false, message: 'Error deleting original resume from S3', error });
-    }
-    //delete the object from parsed resume bucket
-    try {
-        await s3Client.send(new DeleteObjectCommand({
-            Bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
-            Key: parsedResumeKey
-        }));
-    } catch (error) {
-        console.error("Error deleting parsed resume from S3:", error);
-        return res.status(500).json({ success: false, message: 'Error deleting parsed resume from S3', error });
+    const { originalResumeKey, parsedResumeKey } = req.body; // Use body instead of query for consistency
+    
+    const userDocument = await DocumentModel.findOne({ googleId });
+    if (!userDocument) return res.status(400).json({ success: false, message: 'User does not exist' });
+
+    // Delete S3 objects
+    const buckets = [
+        { Bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME, Key: originalResumeKey },
+        { Bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME, Key: parsedResumeKey }
+    ];
+
+    for (const b of buckets) {
+        try {
+            await s3Client.send(new DeleteObjectCommand(b));
+        } catch (error) {
+            console.error(`Error deleting ${b.Key} from S3:`, error);
+            return res.status(500).json({ success: false, message: `Error deleting ${b.Key} from S3`, error });
+        }
     }
 
-    //delete the document from the mongoDB model
-    await DocumentModel.findOne({ googleId: googleId }).then(async (document) => {
-        for(let i = 0; i < document.pastQueries.length; i++) {
-            const currentQuery = document.pastQueries[i];
-            if(currentQuery.resume === originalResumeKey) {
-                document.pastQueries.splice(i, 1);
-                break;
-            }
-        }
-        await document.save();
-    }).catch((error) => {
-        console.error("Error finding document in MongoDB:", error);
-        return res.status(500).json({ success: false, message: 'Error finding document in MongoDB', error });
-    });
+    // Remove from MongoDB array
+    const indexToRemove = userDocument.pastQueries.findIndex(q => q.resume === originalResumeKey);
+    if (indexToRemove > -1) {
+        userDocument.pastQueries.splice(indexToRemove, 1);
+        await userDocument.save();
+    }
+
     return res.status(200).json({ success: true, message: 'Document deleted successfully' });
-    
 });
+
 export default router;
