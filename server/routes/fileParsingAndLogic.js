@@ -466,20 +466,23 @@ router.post("/convertToPDF", async (req, res) => {
   // --- Helper: Ask LLM to fix LaTeX ---
   async function fixLatexWithLLM(latexCode, errorLog) {
     const prompt = `
-  You are a LaTeX expert. The following LaTeX code failed to compile. 
-  Fix the errors so it becomes valid and compilable LaTeX.
+      You are a LaTeX expert. The following LaTeX code failed to compile. 
+      Fix the errors so it becomes valid and compilable LaTeX.
 
-  --- LaTeX Code ---
-  ${latexCode}
+      Requirements:
+      1. Keep the overall structure and formatting intact (do not delete required sections).
+      2. Do not include any Markdown, explanations, or comments. 
+      3. Return only valid LaTeX code that can compile.
 
-  --- Error Log ---
-  ${errorLog}
+      --- LaTeX Code ---
+      ${latexCode}
 
-  Only output the corrected LaTeX code, nothing else.
-      `;
-      const response = await googleGemini.invoke(prompt);
-      return response.content;
-    }
+      --- Error Log ---
+      ${errorLog}
+        `;
+    const response = await googleGemini.invoke(prompt);
+    return response.content;
+  }
 
     try {
       await fs.mkdir(outputDir, { recursive: true }); // ensure output dir exists
@@ -500,7 +503,8 @@ router.post("/convertToPDF", async (req, res) => {
 
           // If error is structured (with logs/errors), pass it to LLM
           if (err && err.errors !== undefined) {
-            currentLatex = await fixLatexWithLLM(currentLatex, err.errors || err.logs);
+            let fixedLatex = await fixLatexWithLLM(currentLatex, err.errors || err.logs);
+            currentLatex = cleanLatex(fixedLatex); // ensure cleaned before retry
           } else {
             throw err; // unknown error, stop early
           }
