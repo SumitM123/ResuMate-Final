@@ -458,7 +458,10 @@ router.post("/convertToPDF", async (req, res) => {
         }
       });
     });
-
+    
+    /* Sending the PDF buffer to chatmodel if it throws an error, and adds the message to the chatmodel with the template such that 
+       it'll fix the LaTeX code based on the error thrown. */
+    
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "inline; filename=output.pdf");
     res.status(200).send(pdfBuffer);
