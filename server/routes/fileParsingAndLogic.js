@@ -378,41 +378,35 @@ router.put('/changeToLaTeX', async (req, res) => {
   let latexResponse = "";
   const cleanLatex = (latex) => {
     // Remove code block markers
-    latex = latex.replace(/```latex|```/g, '');
+    latex = latex.replace(/```(?:latex)?/g, '');
 
-    // Remove empty list environments (itemize, enumerate, description)
-    latex = latex.replace(/\\begin\{(itemize|enumerate|description)\}[\s\n]*?\\end\{\1\}/g, '');
+    // Remove empty list environments
+    latex = latex.replace(/\\begin\{(itemize|enumerate|description)\}\s*\\end\{\1\}/g, '');
 
-    // Remove empty \section{} or \subsection{} headers
-    latex = latex.replace(/\\section\{[ \t]*\}\s*/g, '');
-    latex = latex.replace(/\\subsection\{[ \t]*\}\s*/g, '');
+    // Remove empty \section{} or \subsection{}
+    latex = latex.replace(/\\section\{\s*\}\s*/g, '');
+    latex = latex.replace(/\\subsection\{\s*\}\s*/g, '');
 
-    // Remove any stray empty \item lines
+    // Remove empty \item (but not valid ones)
     latex = latex.replace(/\\item\s*(?=(\\item|\\end\{))/g, '');
+    latex = latex.replace(/\\item\s*$/gm, ''); 
 
-    // Remove \item with only whitespace or no content
-    latex = latex.replace(/\\item\s*[\n\r]+/g, '');
-
-    // Collapse too many blank lines
+    // Collapse multiple blank lines
     latex = latex.replace(/\n{3,}/g, '\n\n');
 
-    // Remove lines with only LaTeX commands and no content (e.g., \item, \section{})
-    latex = latex.replace(/^(\\[a-zA-Z]+)\s*$/gm, '');
+    // Remove command-only lines (\item, \section{}, etc.)
+    latex = latex.replace(/^(\\[a-zA-Z]+\s*)$/gm, '');
 
-    // Remove unmatched closing braces at the end of the file
-    latex = latex.replace(/^\s*}\s*$/gm, '');
-
-    // Optionally, check for balanced braces (rudimentary)
+    // Balance braces check (warn only)
     const openBraces = (latex.match(/{/g) || []).length;
     const closeBraces = (latex.match(/}/g) || []).length;
     if (openBraces !== closeBraces) {
       console.warn('Warning: Unmatched braces in LaTeX code.');
-      // Optionally, try to fix by adding missing braces (not recommended for production)
-      // latex += '}'.repeat(openBraces - closeBraces);
     }
 
     return latex.trim();
-  }
+  };
+
   try {
     latexResponse = await openAI.invoke(message);
     latexResponse.content = cleanLatex(latexResponse.content);
@@ -434,34 +428,90 @@ router.put('/changeToLaTeX', async (req, res) => {
 router.post("/convertToPDF", async (req, res) => {
   const { latexContent } = req.body;
   const outputDir = path.join(__dirname, "../lib/local");
-  try {
-    await fs.mkdir(outputDir, { recursive: true }); // Ensure output directory exists
+  // const llm = new ChatOpenAI({ model: "gpt-4o-mini" }); // choose your LLM
+
+  // --- Helper: Compile LaTeX with tectonic ---
+  async function tryCompileLatex(latexCode, outputDir) {
     const tempFile = path.join(outputDir, "temp.tex");
+    await fs.writeFile(tempFile, latexCode);
 
-    await fs.writeFile(tempFile, latexContent);
+    return new Promise((resolve, reject) => {
+      const proc = spawn("tectonic", [tempFile, `--outdir=${outputDir}`, "--keep-logs"]);
 
-    const pdfBuffer = await new Promise((resolve, reject) => {
-      const proc = spawn("tectonic", [tempFile, `--outdir=${outputDir}`, "--keep-logs"], {
-        stdio: "inherit",
-      });
+      let errorOutput = "";
+      let logOutput = "";
+
+      proc.stdout.on("data", (data) => (logOutput += data.toString()));
+      proc.stderr.on("data", (data) => (errorOutput += data.toString()));
 
       proc.on("close", async (code) => {
         if (code === 0) {
           try {
             const buffer = await fs.readFile(path.join(outputDir, "temp.pdf"));
-            resolve(buffer);
+            resolve({ success: true, pdf: buffer });
           } catch (err) {
             reject(err);
           }
         } else {
-          reject(new Error(`LaTeX compile failed with code ${code}`));
+          reject({
+            success: false,
+            logs: logOutput,
+            errors: errorOutput,
+          });
         }
       });
     });
-    
-    /* Sending the PDF buffer to chatmodel if it throws an error, and adds the message to the chatmodel with the template such that 
-       it'll fix the LaTeX code based on the error thrown. */
-    
+  }
+
+  // --- Helper: Ask LLM to fix LaTeX ---
+  async function fixLatexWithLLM(latexCode, errorLog) {
+    const prompt = `
+  You are a LaTeX expert. The following LaTeX code failed to compile. 
+  Fix the errors so it becomes valid and compilable LaTeX.
+
+  --- LaTeX Code ---
+  ${latexCode}
+
+  --- Error Log ---
+  ${errorLog}
+
+  Only output the corrected LaTeX code, nothing else.
+      `;
+      const response = await googleGemini.invoke(prompt);
+      return response.content;
+    }
+
+    try {
+      await fs.mkdir(outputDir, { recursive: true }); // ensure output dir exists
+      let currentLatex = latexContent;
+      let pdfBuffer = null;
+      let success = false;
+
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const result = await tryCompileLatex(currentLatex, outputDir);
+          if (result.success) {
+            pdfBuffer = result.pdf;
+            success = true;
+            break;
+          }
+        } catch (err) {
+          console.warn(`Attempt ${attempt} failed.`);
+
+          // If error is structured (with logs/errors), pass it to LLM
+          if (err && err.errors !== undefined) {
+            currentLatex = await fixLatexWithLLM(currentLatex, err.errors || err.logs);
+          } else {
+            throw err; // unknown error, stop early
+          }
+        }
+      }
+
+      if (!success) {
+        return res.status(400).json({ error: "Failed to compile LaTeX after 3 attempts." });
+      }
+
+    // Send PDF to client
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", "inline; filename=output.pdf");
     res.status(200).send(pdfBuffer);
@@ -469,30 +519,21 @@ router.post("/convertToPDF", async (req, res) => {
   } catch (error) {
     console.error("Error converting LaTeX:", error);
     res.status(500).json({ error: "Failed to convert LaTeX to PDF" });
+  } finally {
+    // Always cleanup temp files
+    const filesToDelete = ["temp.tex", "temp.pdf", "temp.log", "temp.aux"];
+    for (const file of filesToDelete) {
+      await fs.unlink(path.join(outputDir, file)).catch((err) => {
+        if (err.code === "ENOENT") {
+          console.warn(`${file} not found, nothing to delete.`);
+        } else {
+          console.error(`Error deleting ${file}:`, err);
+        }
+      });
+    }
   }
-
-  await fs.unlink(path.join(outputDir, "temp.tex")).catch((err) => {
-    if(err.code === "ENOENT") {
-      console.warn("temp.tex file not found, nothing to delete:", err.path);
-    } else {
-      console.error("Error deleting temp.tex file:", err);
-    }
-  });
-  await fs.unlink(path.join(outputDir, "temp.pdf")).catch((err) => {
-    if(err.code === "ENOENT") {
-      console.warn("temp.pdf file not found, nothing to delete:", err.path);
-    } else {
-      console.error("Error deleting temp.pdf file:", err);
-    }
-  });
-  await fs.unlink(path.join(outputDir, "temp.log")).catch((err) => {
-    if(err.code === "ENOENT") {
-      console.warn("temp.log file not found, nothing to delete:", err.path);
-    } else {
-      console.error("Error deleting temp.log file:", err);
-    }
-  });
 });
+
 
 export default router;
 
