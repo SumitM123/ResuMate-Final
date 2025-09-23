@@ -156,6 +156,7 @@ function AllPastQueriesPage() {
                         parsedResumeKey: currentQuery.parsedResumeKey
                 }
             });
+            await gettingDocuments(); 
         } catch (error) {
             console.error("Error deleting document:", error);
         }
