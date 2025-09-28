@@ -1,0 +1,102 @@
+# ResuMate
+
+ResuMate is a full-stack web application for generating, editing, and managing professional resumes using AI and LaTeX. It allows users to upload their resume, input a job description, extract keywords, and generate a tailored resume in PDF format. The app also supports storing and managing past resume queries.
+
+---
+
+## Folder Structure
+
+### `client/`
+This folder contains the React frontend for ResuMate.
+
+- **`src/Components/`**
+  - `JobDescription.jsx`: Component for uploading a resume and entering a job description. Handles file upload, job description input, and sends data to the backend for keyword extraction and resume parsing.
+  - Other components: UI elements for displaying queries, resume previews, etc.
+
+- **`src/Pages/`**
+  - `LoadingPage/LoadingPage.jsx`: Handles the process of integrating keywords into the resume, converting to LaTeX, and generating the PDF.
+  - `AllPastQueriesPage/allPastQueriesBar.jsx`: Displays and manages the user's history of resume queries, including deletion and navigation.
+  - Other pages: Application landing, output page, etc.
+
+- **`src/context/`**
+  - `UserContext.js`: Provides global state for user data, resume, job description, keywords, and LaTeX content.
+
+- **Other files/folders:**
+  - `App.js`, `index.js`: Main React app setup and routing.
+  - `JobDescription.css`, other stylesheets.
+
+---
+
+### `server/`
+This folder contains the Node.js/Express backend for ResuMate.
+
+- **`routes/`**
+  - `fileParsingAndLogic.js`: Main backend logic for parsing resumes, extracting keywords, integrating keywords, converting to LaTeX, and generating PDFs. Handles communication with AI models (Groq, Gemini, etc.).
+  - `createUsers.js`: Handles user creation, document management, and deletion. Interfaces with MongoDB/Atlas and S3 for storage.
+  - Other route files: User authentication, query history, etc.
+
+- **`lib/`**
+  - Local storage and temp files for LaTeX compilation and PDF generation.
+
+- **Other files/folders:**
+  - `config.env`: Environment variables (API keys, DB URIs, etc.).
+  - `server.js` or `index.js`: Main Express server setup.
+
+---
+
+## How It Works
+
+1. **User uploads a resume (PDF) and enters a job description.**
+2. **Frontend sends the resume and job description to the backend.**
+3. **Backend extracts resume data and job keywords using AI models.**
+4. **Backend integrates keywords into the resume, converts it to LaTeX, and compiles to PDF.**
+5. **Frontend displays the generated PDF and allows users to manage past queries.**
+
+---
+
+## Setup & Usage
+
+1. **Install dependencies:**
+   - In both `client/` and `server/` folders, run:
+     ```
+     npm install
+     ```
+
+2. **Set up environment variables:**
+   - Create a `config.env` file in the `server/` folder with your API keys, MongoDB URI, S3 credentials, etc.
+
+3. **Start the backend:**
+   ```
+   cd server
+   npm start
+   ```
+
+4. **Start the frontend:**
+   ```
+   cd client
+   npm start
+   ```
+
+5. **Access the app:**
+   - Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## Troubleshooting
+
+- **Proxy errors:** Ensure the backend is running on the correct port and the proxy is set in `client/package.json`.
+- **LaTeX errors:** Check the backend logs for LaTeX compilation issues. The backend attempts to fix errors using AI up to 3 times.
+- **Database errors:** Ensure MongoDB Atlas is accessible and credentials are correct.
+- **S3 errors:** Ensure AWS credentials and bucket permissions are set.
+
+---
+
+## License
+
+MIT
+
+---
+
+## Authors
+
+Sumit Mantri and contributors.

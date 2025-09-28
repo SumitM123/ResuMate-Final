@@ -256,7 +256,10 @@ router.post('/editResume', async (req, res) => {
             - Include all original content except where improved to better match the job description.
             - Follow a professional tone and ensure factual consistency with the candidate's background.
             - It HAS to be in a JSON format, and the content must be in a string format.
-            `),
+            
+            **Important:** Don't make up any experience or details that aren't supported by the original resume. Only enhance and optimize existing information. And include the keywords naturally, and only insert them if it's applicable to the current context of the resume.
+            **Important:** The page limit is 1 page EXACTLY. Do not exceed this limit. If exceeds this limit, remove the details that are not essential to the job description.
+          `),
         new HumanMessage({
             content: `Resume Data: ${JSON.stringify(resumeData)}. Here is the job description keywords: ${JSON.stringify(jobDescriptionKeywords)}.`
     })];
@@ -284,6 +287,9 @@ router.post('/editResume', async (req, res) => {
             **Output Requirements:**
             - The **entire updated JSON resume**.
             - No additional commentary—only the JSON result.
+
+            **Important:** Do not fabricate any experience or details that aren't supported by the original resume. Only enhance and optimize existing information, applying the XYZ format where it fits naturally. Don't try to
+            quantify every single bullet point; only do so where there's already quantification information present. 
         `),
         new HumanMessage({
             content: `Resume Data: ${JSON.stringify(resumeData)}`
