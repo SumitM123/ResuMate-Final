@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import NavBar from '../../Components/NavBar/NavBar';
 import { useNavigate } from 'react-router-dom';
 import './home.css'; // Import CSS file
@@ -13,7 +13,9 @@ function Home() {
     }
     alert("Please log in  to continue.");
   };
-
+  useEffect(() => {
+    sessionStorage.setItem('userContext', JSON.stringify({}));
+  }, []);
   return (
     <>
       {/* <NavBar /> */}

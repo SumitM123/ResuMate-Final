@@ -158,6 +158,7 @@ useEffect(
         console.log("Successfully converted to PDF");
         const pdfBlob = new Blob([pdfResponse.data], { type: 'application/pdf' });
         const pdfUrl = URL.createObjectURL(pdfBlob);
+        userInfo.setPdfContent(pdfUrl);
         navigate('/outputPage', { 
           state: { 
             pdfUrl,

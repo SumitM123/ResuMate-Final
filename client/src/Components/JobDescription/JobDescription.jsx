@@ -11,7 +11,7 @@ function JobDescription() {
   console.log("User Context from session storage:", sessionStorage.getItem('userContext'));
   const [fileUpload, setFileUpload] = useState(JSON.parse(sessionStorage.getItem('userContext')).file);
   const [jobDescriptionVal, setJobDescriptionVal] = useState(JSON.parse(sessionStorage.getItem('userContext')).jobDescription);
-
+  
   useEffect(() => {
     if(fileUpload) {
       sessionStorage.setItem('userContext', JSON.stringify({
@@ -31,6 +31,21 @@ function JobDescription() {
       setErrorMessage('Please upload a file and enter a job description.');
     }
   }, [fileUpload, jobDescriptionVal]); 
+  // useEffect(() => {
+  //   if (parsedResumeData) {
+  //     sessionStorage.setItem('userContext', JSON.stringify({
+  //       ...JSON.parse(sessionStorage.getItem('userContext')),
+  //       parsedResumeData
+  //     }));
+  //   }
+  //   if (jobkeywords) {
+  //     sessionStorage.setItem('userContext', JSON.stringify({
+  //       ...JSON.parse(sessionStorage.getItem('userContext')),
+  //       jobkeywords
+  //     }));
+  //   }
+  // }, [parsedResumeData, jobkeywords])
+
   const navigate = useNavigate();
 
   const checkFile = (e) => {
