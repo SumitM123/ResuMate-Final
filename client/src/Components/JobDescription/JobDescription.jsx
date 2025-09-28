@@ -8,18 +8,30 @@ function JobDescription() {
   const userInfo = useUser();
   const [errorMessage, setErrorMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  console.log("User Context from session storage:", sessionStorage.getItem('userContext'));
+  const [fileUpload, setFileUpload] = useState(JSON.parse(sessionStorage.getItem('userContext')).file);
+  const [jobDescriptionVal, setJobDescriptionVal] = useState(JSON.parse(sessionStorage.getItem('userContext')).jobDescription);
 
-  const [fileUpload, setFileUpload] = useState();
-  const [jobDescriptionVal, setJobDescriptionVal] = useState();
-
-  const navigate = useNavigate();
   useEffect(() => {
+    if(fileUpload) {
+      sessionStorage.setItem('userContext', JSON.stringify({
+        ...JSON.parse(sessionStorage.getItem('userContext')),
+        file: fileUpload
+      }));
+    }
+    if(jobDescriptionVal) {
+      sessionStorage.setItem('userContext', JSON.stringify({
+        ...JSON.parse(sessionStorage.getItem('userContext')),
+        jobDescription: jobDescriptionVal
+      }));
+    } 
     if(fileUpload && jobDescriptionVal) { 
       setErrorMessage('');
     } else {
       setErrorMessage('Please upload a file and enter a job description.');
     }
-  }, [fileUpload, jobDescriptionVal]);
+  }, [fileUpload, jobDescriptionVal]); 
+  const navigate = useNavigate();
 
   const checkFile = (e) => {
     const selectedFile = e.target.files[0];

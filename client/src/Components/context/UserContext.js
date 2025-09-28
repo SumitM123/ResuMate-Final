@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, use } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 // Create the context object. This object DOESN'T HOLD DATA, but rather provides a way for components to publish and subcribe to data changes
 const UserContext = createContext();
 
@@ -18,17 +19,17 @@ export const useUser = () => {
 //UserProvider is where the state is managed, and any changes to that state lead to a new 'value' being passed down the context, updating the information available
 export const UserProvider = ({ children }) => {
   //the children prop represents whatever components are rendered between the opening and closing tags of the UserProvider component
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null);
   const [isLoading, setIsLoading] = useState(true);
-  const [jobDescription, setJobDescription] = useState('');
-  const [jobkeywords, setJobKeywords] = useState('');
+  const [jobDescription, setJobDescription] = useState(JSON.parse(sessionStorage.getItem('userContext'))?.jobDescription || "");
+  const [jobkeywords, setJobKeywords] = useState(JSON.parse(sessionStorage.getItem('userContext'))?.jobkeywords || "");
   //the File object that the user originially uploaded
-  const [file, setFile] = useState(null);
-  const [parsedResumeData, setParsedResumeData] = useState(null);
+  const [file, setFile] =  useState(JSON.parse(sessionStorage.getItem('userContext'))?.file || null);
+  const [parsedResumeData, setParsedResumeData] = useState(JSON.parse(sessionStorage.getItem('userContext'))?.parsedResumeData || null);
   //state for the output pdf
   const [pdfContent, setPdfContent] = useState(null); 
+  const [latexContent, setLatexContent] = useState(JSON.parse(sessionStorage.getItem('userContext'))?.latexContent || null);
   const navigate = useNavigate();
-  const [latexContent, setLatexContent] = useState(null);
   // Check if user is already logged in (from localStorage). localStorage object is a built-in feature of modern web browswers. It allows web applications to store key-value pairs of data persistently within the user's brower
   // useEffect(() => {
   //   const storedUser = localStorage.getItem('user');
@@ -78,7 +79,17 @@ export const UserProvider = ({ children }) => {
     latexContent,
     setLatexContent
   };
-
+  useEffect(() => {
+    const userData = {
+      user,
+      file,
+      jobDescription,
+      parsedResumeData,
+      jobkeywords,
+      latexContent
+    };
+    sessionStorage.setItem('userContext', JSON.stringify(userData));
+  }, [user, file, jobDescription, parsedResumeData, jobkeywords, latexContent]);
   return (
     //It renders the UserContext.Provider component. And then  value property is crucial because it passes the value object above to all the components with the Context subtree
     <UserContext.Provider value={value}>

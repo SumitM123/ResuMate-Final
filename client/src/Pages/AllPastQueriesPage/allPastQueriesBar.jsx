@@ -163,12 +163,12 @@ function AllPastQueriesPage() {
             </div>
             
             <div className="navigation-controls">
-                <button className="nav-button previous" onClick={previousClick}>
+                {/* <button className="nav-button previous" onClick={previousClick}>
                     ← Previous
                 </button>
                 <button className="nav-button next" onClick={nextClick}>
                     Next →
-                </button>
+                </button> */}
                 <button className="nav-button delete" onClick={deleteClick}>
                     🗑️ Delete
                 </button>
