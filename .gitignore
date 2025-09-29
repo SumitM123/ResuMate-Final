@@ -5,4 +5,4 @@ client/.gitignore
 server/config.env
 client/config.env
 
-server/client_secret_305627446808-daj9lmdn792fhqsg1smsv7prrt9db3p4.apps.googleusercontent.com.json
+server/client.json
