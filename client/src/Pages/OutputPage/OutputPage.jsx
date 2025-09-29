@@ -22,37 +22,36 @@ function OutputPage() {
       sessionStorage.removeItem('outputGenerated');
     };
   }, []);
+  console.log("PDF URL:", pdfUrl);
   useEffect(() => {
-    var pdfFile;
-    async function getPDF() {
-      const response = await axios.get(pdfUrl, { responseType: 'blob' });
-      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
-      const pdfBlobURL = URL.createObjectURL(pdfBlob);
-      setPdfUrl(pdfBlobURL);
-    }
-    async function uploadFiles() {
-      //I would want to create a request in which it takes the pdf and the job description sent by the user and store it inside the database
-      const filesToServer = new FormData();
-      filesToServer.append("originalResume", userInfo.file, "originalResume.pdf");
-      filesToServer.append("jobDescription", userInfo.jobDescription);
-      filesToServer.append("googleId", userInfo.user.googleId);
-      filesToServer.append("parsedOutputResume", pdfFile, "parsedOutputResume.pdf");
+    async function getPDFAndMaybeUpload() {
+      if (!pdfUrl) return;
       try {
-        await axios.post('http://localhost:5000/users/uploadFiles', filesToServer, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+        const response = await axios.get(pdfUrl, { responseType: 'blob' });
+        const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+        const pdfBlobURL = URL.createObjectURL(pdfBlob);
+        setPdfUrl(pdfBlobURL);
+
+        // Only upload if not already done
+        if (sessionStorage.getItem('outputGenerated') !== 'true') {
+          const filesToServer = new FormData();
+          if (userInfo.file instanceof Blob) {
+            filesToServer.append("originalResume", userInfo.file, "originalResume.pdf");
           }
-        });
-      }  catch (error) {
-        console.error("Error uploading files to server:", error);
+          filesToServer.append("jobDescription", userInfo.jobDescription || "");
+          filesToServer.append("googleId", userInfo.user?.googleId || "");
+          filesToServer.append("parsedOutputResume", pdfBlob, "parsedOutputResume.pdf");
+          await axios.post('http://localhost:5000/users/uploadFiles', filesToServer, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          sessionStorage.setItem('outputGenerated', 'true');
+        }
+      } catch (error) {
+        console.error("Error fetching or uploading PDF:", error);
       }
-      sessionStorage.setItem('outputGenerated', 'true');
     }
-    if(sessionStorage.getItem('outputGenerated') !== 'true' && pdfUrl) {
-      uploadFiles();
-    }
-    getPDF();
-  }, [pdfUrl]);
+    getPDFAndMaybeUpload();
+  }, [pdfUrl, userInfo.file, userInfo.jobDescription, userInfo.user]);
   return (
     <div className="output-page-container">
       <div className="output-header">
