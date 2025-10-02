@@ -120,7 +120,7 @@ useEffect(
       let responseTex;
       // Send resume + keywords to backend so keywords can be integrated into resume
       try {
-        responseTex = await axios.post('http://localhost:5000/loadingPage/editResume', {
+        responseTex = await axios.post('https://resumate-backend-xv4m.onrender.com/loadingPage/editResume', {
           resumeData,
           jobDescriptionKeywords
         }, {
