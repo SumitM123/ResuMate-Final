@@ -35,12 +35,14 @@ function OutputPage() {
         // Only upload if not already done
         if (sessionStorage.getItem('outputGenerated') !== 'true') {
           const filesToServer = new FormData();
+          const prefix = Date.now();
           if (userInfo.file instanceof Blob) {
-            filesToServer.append("originalResume", userInfo.file, "originalResume.pdf");
+            filesToServer.append("originalResume", userInfo.file, prefix + "originalResume.pdf");
           }
           filesToServer.append("jobDescription", userInfo.jobDescription || "");
           filesToServer.append("googleId", userInfo.user?.googleId || "");
-          filesToServer.append("parsedOutputResume", pdfBlob, "parsedOutputResume.pdf");
+          filesToServer.append("parsedOutputResume", pdfBlob, prefix + "parsedOutputResume.pdf");
+          filesToServer.append("prefix", prefix.toString());
           await axios.post('http://localhost:5000/users/uploadFiles', filesToServer, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
