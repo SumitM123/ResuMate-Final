@@ -71,7 +71,7 @@ function JobDescription() {
     const jobDescription = jobDescriptionVal;
     console.log("Sending job description to backend:", jobDescription);
     try {
-      const response = await axios.post('http://localhost:5000/loadingPage/JobDescriptionKeyWord', {jobDescription}, {
+      const response = await axios.post('https://resumate-backend-xv4m.onrender.com/JobDescriptionKeyWord', {jobDescription}, {
         headers: { 'Content-Type': 'application/json' }
       });
       return response;
