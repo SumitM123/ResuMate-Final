@@ -33,15 +33,17 @@ function OutputPage() {
         setPdfUrl(pdfBlobURL);
 
         // Only upload if not already done
+        const prefix = Date.now();
         if (sessionStorage.getItem('outputGenerated') !== 'true') {
           const filesToServer = new FormData();
           if (userInfo.file instanceof Blob) {
-            filesToServer.append("originalResume", userInfo.file, "originalResume.pdf");
+            filesToServer.append("originalResume", userInfo.file, prefix.toString() + "originalResume.pdf");
           }
           filesToServer.append("jobDescription", userInfo.jobDescription || "");
           filesToServer.append("googleId", userInfo.user?.googleId || "");
-          filesToServer.append("parsedOutputResume", pdfBlob, "parsedOutputResume.pdf");
-          await axios.post('http://localhost:5000/users/uploadFiles', filesToServer, {
+          filesToServer.append("parsedOutputResume", pdfBlob, prefix.toString() + "parsedOutputResume.pdf");
+          filesToServer.append("prefix", prefix.toString());
+          await axios.post('https://resumate-backend-xv4m.onrender.com/users/uploadFiles', filesToServer, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           sessionStorage.setItem('outputGenerated', 'true');
