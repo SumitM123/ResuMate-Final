@@ -4,5 +4,5 @@ server/node_modules/*
 client/.gitignore
 server/config.env
 client/config.env
-
+client/.env
 server/client.json
