@@ -643,7 +643,7 @@ router.post("/convertToPDF", async (req, res) => {
     }
 
     if (!success) {
-      return res.status(400).json({ error: "Failed to compile LaTeX after 3 attempts." });
+      throw new Error("Failed to compile LaTeX after 3 attempts.");
     }
 
     // Send PDF to client

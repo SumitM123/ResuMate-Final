@@ -18,6 +18,7 @@ import SignUp from './Pages/SignUpPage/SignUpPage';
 import NavBar from './Components/NavBar/NavBar';
 import FilesSend from './Pages/ApplicationPage/filesSending.jsx'
 import OutputPage from './Pages/OutputPage/OutputPage.jsx'
+import BadOutputPage from './Pages/OutputPage/BadOutputPage.jsx';
 import LoadingPage from './Pages/LoadingPage/LoadingPage.jsx'
 import { UserProvider } from './Components/context/UserContext.js';
 import AllPastQueriesPage from './Pages/AllPastQueriesPage/allPastQueriesBar.jsx';
@@ -35,6 +36,7 @@ function App() {
         {/* <Route path="/signUp" element={<SignUp />} /> */}
         <Route path='/outputPage' element={<OutputPage/>}/>
         <Route path="/pastQueries" element={<AllPastQueriesPage/>}/>
+        <Route path="/badOutputPage" element={<BadOutputPage/>}/>
       </Routes>
     </UserProvider>
   );

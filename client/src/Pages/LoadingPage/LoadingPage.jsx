@@ -167,6 +167,7 @@ useEffect(
         });
       } catch (error) {
         console.error("Error in convert resume to PDF:", error);
+        navigate('/badOutputPage');
         return;
       }
     }
