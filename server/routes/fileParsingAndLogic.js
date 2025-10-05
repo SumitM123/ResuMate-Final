@@ -62,67 +62,106 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+const uploadCloud = multer({ storage: multer.memoryStorage() });
 //might have to combine the JSON extraction and job description extraction into 1
 
 //WORKS
-router.post(
-  '/extractJSON',
-  upload.single('resume'),
-  async (req, res) => {
-    console.log("Checking if resume has been uploaded successfully");
-    try {
 
-      // 1. Read uploaded file
-      const filePath = path.join(uploadDir, req.file.filename);
-      const pdfBytes = await fs.readFile(filePath);
+router.post('/extractJSON', uploadCloud.single('resume'), async (req, res) => {
+  try {
+    // req.file.buffer is already your PDF in memory
+    const pdfBase64 = req.file.buffer.toString("base64");
 
-      // 2. Encode to base64
-      const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
-
-      // 3. Build messages for chat model
-      const messages = [
-        new SystemMessage(
-          "You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."
-        ),
-        new HumanMessage({
-          content: [
-            {
-              type: "text",
-              text: "Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }"
-            },
-            {
-              type: "file",
-              source_type: "base64",
-              mime_type: "application/pdf",
-              data: pdfBase64
-            }
-          ]
-        })
-      ];
-
-      // 4. Await response from chat model
-      const response = await googleGemini.invoke(messages);
-
-      // 5. Send back model response
-      res.status(200).json({
-        success: true,
-        parsedResume: response.content
-      });
-      console.log("JSON has been extracted.");
-      console.log("The response content object from AI model: " + JSON.stringify(response.content));
-    } catch (err) {
-      console.error("Error parsing uploading resume:", err);
-      res.status(500).json({ success: false, error: err.message });
-    }
-    //Any code after the callback function will execute immediately. 
-    await fs.unlink(path.join(uploadDir, req.file.filename)).catch((err) => {
-      if(err.code === "ENOENT") {
-        console.warn("File not found, nothing to delete:", err.path);
-      } else {
-        console.error("Error deleting uploaded file:", err);
-      }
+    // Build messages for chat model
+    const messages = [
+      new SystemMessage(
+        "You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."
+      ),
+      new HumanMessage({
+        content: [
+          {
+            type: "text",
+            text: "Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }"
+          },
+          {
+            type: "file",
+            source_type: "base64",
+            mime_type: "application/pdf",
+            data: pdfBase64
+          }
+        ]
+      })
+    ];
+    const response = await googleGemini.invoke(messages);
+    res.status(200).json({
+      success: true,
+      parsedResume: response.content
     });
+    console.log("JSON has been extracted.");
+    console.log("The response content object from AI model: " + JSON.stringify(response.content));
+  } catch (err) {
+    console.error("Error parsing uploading resume:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
+// router.post(
+//   '/extractJSON',
+//   upload.single('resume'),
+//   async (req, res) => {
+//     console.log("Checking if resume has been uploaded successfully");
+//     try {
+
+//       // 1. Read uploaded file
+//       const filePath = path.join(uploadDir, req.file.filename);
+//       const pdfBytes = await fs.readFile(filePath);
+
+//       // 2. Encode to base64
+//       const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+
+//       // 3. Build messages for chat model
+//       const messages = [
+//         new SystemMessage(
+//           "You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."
+//         ),
+//         new HumanMessage({
+//           content: [
+//             {
+//               type: "text",
+//               text: "Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }"
+//             },
+//             {
+//               type: "file",
+//               source_type: "base64",
+//               mime_type: "application/pdf",
+//               data: pdfBase64
+//             }
+//           ]
+//         })
+//       ];
+
+//       // 4. Await response from chat model
+//       const response = await googleGemini.invoke(messages);
+
+//       // 5. Send back model response
+//       res.status(200).json({
+//         success: true,
+//         parsedResume: response.content
+//       });
+//       console.log("JSON has been extracted.");
+//       console.log("The response content object from AI model: " + JSON.stringify(response.content));
+//     } catch (err) {
+//       console.error("Error parsing uploading resume:", err);
+//       res.status(500).json({ success: false, error: err.message });
+//     }
+//     //Any code after the callback function will execute immediately. 
+//     await fs.unlink(path.join(uploadDir, req.file.filename)).catch((err) => {
+//       if(err.code === "ENOENT") {
+//         console.warn("File not found, nothing to delete:", err.path);
+//       } else {
+//         console.error("Error deleting uploaded file:", err);
+//       }
+//     });
+// });
 
 // router.post('/', upload.fields([
 //     {name: 'resume', maxCount: 1}
@@ -434,6 +473,13 @@ router.put('/changeToLaTeX', async (req, res) => {
 router.post("/convertToPDF", async (req, res) => {
   const { latexContent } = req.body;
   const outputDir = path.join(__dirname, "../lib/local");
+
+  // try {
+  //   await fs.mkdir(outputDir, { recursive: true }); // ensure output dir exists
+  // } catch (err) {
+  //   console.error("Error creating output directory:", err);
+  //   return res.status(500).json({ error: "Failed to create output directory" });
+  // }
   // const llm = new ChatOpenAI({ model: "gpt-4o-mini" }); // choose your LLM
 
   // --- Helper: Compile LaTeX with tectonic ---
@@ -490,36 +536,36 @@ router.post("/convertToPDF", async (req, res) => {
     return response.content;
   }
 
-    try {
-      await fs.mkdir(outputDir, { recursive: true }); // ensure output dir exists
-      let currentLatex = latexContent;
-      let pdfBuffer = null;
-      let success = false;
+  try {
+    await fs.mkdir(outputDir, { recursive: true }); // ensure output dir exists
+    let currentLatex = latexContent;
+    let pdfBuffer = null;
+    let success = false;
 
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const result = await tryCompileLatex(currentLatex, outputDir);
-          if (result.success) {
-            pdfBuffer = result.pdf;
-            success = true;
-            break;
-          }
-        } catch (err) {
-          console.warn(`Attempt ${attempt} failed.`);
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const result = await tryCompileLatex(currentLatex, outputDir);
+        if (result.success) {
+          pdfBuffer = result.pdf;
+          success = true;
+          break;
+        }
+      } catch (err) {
+        console.warn(`Attempt ${attempt} failed.`);
 
-          // If error is structured (with logs/errors), pass it to LLM
-          if (err && err.errors !== undefined) {
-            let fixedLatex = await fixLatexWithLLM(currentLatex, err.errors || err.logs);
-            currentLatex = cleanLatex(fixedLatex); // ensure cleaned before retry
-          } else {
-            throw err; // unknown error, stop early
-          }
+        // If error is structured (with logs/errors), pass it to LLM
+        if (err && err.errors !== undefined) {
+          let fixedLatex = await fixLatexWithLLM(currentLatex, err.errors || err.logs);
+          currentLatex = cleanLatex(fixedLatex); // ensure cleaned before retry
+        } else {
+          throw err; // unknown error, stop early
         }
       }
+    }
 
-      if (!success) {
-        return res.status(400).json({ error: "Failed to compile LaTeX after 3 attempts." });
-      }
+    if (!success) {
+      return res.status(400).json({ error: "Failed to compile LaTeX after 3 attempts." });
+    }
 
     // Send PDF to client
     res.setHeader("Content-Type", "application/pdf");
