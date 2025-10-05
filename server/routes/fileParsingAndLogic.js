@@ -523,7 +523,36 @@ router.put('/changeToLaTeX', async (req, res) => {
 router.post("/convertToPDF", async (req, res) => {
   const { latexContent } = req.body;
   const outputDir = path.join(__dirname, "../lib/local");
+  const cleanLatex = (latex) => {
+    // Remove code block markers
+    latex = latex.replace(/```(?:latex)?/g, '');
 
+    // Remove empty list environments
+    latex = latex.replace(/\\begin\{(itemize|enumerate|description)\}\s*\\end\{\1\}/g, '');
+
+    // Remove empty \section{} or \subsection{}
+    latex = latex.replace(/\\section\{\s*\}\s*/g, '');
+    latex = latex.replace(/\\subsection\{\s*\}\s*/g, '');
+
+    // Remove empty \item (but not valid ones)
+    latex = latex.replace(/\\item\s*(?=(\\item|\\end\{))/g, '');
+    latex = latex.replace(/\\item\s*$/gm, ''); 
+
+    // Collapse multiple blank lines
+    latex = latex.replace(/\n{3,}/g, '\n\n');
+
+    // Remove command-only lines (\item, \section{}, etc.)
+    latex = latex.replace(/^(\\[a-zA-Z]+\s*)$/gm, '');
+
+    // Balance braces check (warn only)
+    const openBraces = (latex.match(/{/g) || []).length;
+    const closeBraces = (latex.match(/}/g) || []).length;
+    if (openBraces !== closeBraces) {
+      console.warn('Warning: Unmatched braces in LaTeX code.');
+    }
+
+    return latex.trim();
+  };
   // try {
   //   await fs.mkdir(outputDir, { recursive: true }); // ensure output dir exists
   // } catch (err) {
