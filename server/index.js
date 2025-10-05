@@ -12,7 +12,7 @@ connectDB();
 const app = express();
 
 // Connecting to front end
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: 'https://resumate-frontend-suo7.onrender.com', credentials: true }));
 
 // Configure body parser with increased limit
 app.use(express.json({ limit: '50mb' }));

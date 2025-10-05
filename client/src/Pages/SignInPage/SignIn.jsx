@@ -15,7 +15,7 @@ function SignInPage() {
     try {
       //promises can have different types. In this case, the type of promise in the axios.post() is an AxiosResponse object. 
       
-      const userData = await axios.post('/api/auth/google', {
+      const userData = await axios.post('https://resumate-backend-xv4m.onrender.com/api/auth/google', {
         token: credentialResponse.credential,
       });
       
@@ -36,7 +36,7 @@ function SignInPage() {
           email: userData.data.email,
         }
         try {
-          const addingUser = await axios.post('/users/addUser', dataToSend, {
+          const addingUser = await axios.post('https://resumate-backend-xv4m.onrender.com/users/addUser', dataToSend, {
             headers: {
               'Content-Type': 'application/json',
             }
@@ -46,7 +46,7 @@ function SignInPage() {
           console.error('Error adding user:', error);
         }
         try{
-          const addingDocumentModel = await axios.post('/users/addingDocumentModel', {googleId: userData.data.googleId}, {
+          const addingDocumentModel = await axios.post('https://resumate-backend-xv4m.onrender.com/users/addingDocumentModel', {googleId: userData.data.googleId}, {
             headers: {
               'Content-Type': 'application/json',
             }

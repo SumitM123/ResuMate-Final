@@ -11,12 +11,12 @@ function DisplayOnePastQuery({ googleId, originalResumeURL, parsedResumeURL, job
             console.log("Inside funcCall");
             if(!googleId || !originalResumeURL || !parsedResumeURL) return;
             try {
-                const originalResumeStream = await axios.get(`/users/specificDocument/${googleId}`, { 
+                const originalResumeStream = await axios.get(`https://resumate-backend-xv4m.onrender.com/users/specificDocument/${googleId}`, { 
                     params: { resumeURL: originalResumeURL, isOriginalResume: true },
                     responseType: 'blob' 
                 });
                 console.log("Original Resume Stream fetched");
-                const parsedResumeStream = await axios.get(`/users/specificDocument/${googleId}`, {
+                const parsedResumeStream = await axios.get(`https://resumate-backend-xv4m.onrender.com/users/specificDocument/${googleId}`, {
                     params: { resumeURL: parsedResumeURL, isOriginalResume: false },
                     responseType: 'blob'
                 });
