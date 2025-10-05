@@ -538,7 +538,7 @@ router.post("/convertToPDF", async (req, res) => {
     await fs.writeFile(tempFile, latexCode);
 
     return new Promise((resolve, reject) => {
-      const proc = spawn("tectonic", [tempFile, `--outdir=${outputDir}`, "--keep-logs"]);
+      const proc = spawn("./tectonic", [tempFile, `--outdir=${outputDir}`, "--keep-logs"]);
 
       let errorOutput = "";
       let logOutput = "";

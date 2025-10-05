@@ -44,7 +44,7 @@ function OutputPage() {
           filesToServer.append("googleId", userInfo.user?.googleId || "");
           filesToServer.append("parsedOutputResume", pdfBlob, prefix + "parsedOutputResume.pdf");
           filesToServer.append("prefix", prefix.toString());
-          await axios.post('http://localhost:5000/users/uploadFiles', filesToServer, {
+          await axios.post('https://resumate-backend-xv4m.onrender.com/users/uploadFiles', filesToServer, {
             headers: { 'Content-Type': 'multipart/form-data' }
           });
           sessionStorage.setItem('outputGenerated', 'true');
