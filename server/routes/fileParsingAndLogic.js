@@ -65,10 +65,6 @@ const upload = multer({ storage });
 const uploadCloud = multer({ storage: multer.memoryStorage() });
 //might have to combine the JSON extraction and job description extraction into 1
 
-const uploadCloud = multer({ storage: multer.memoryStorage() });
-//might have to combine the JSON extraction and job description extraction into 1
-
-//WORKS
 
 router.post('/extractJSON', uploadCloud.single('resume'), async (req, res) => {
   try {
@@ -113,7 +109,6 @@ router.post('/extractJSON', uploadCloud.single('resume'), async (req, res) => {
 //   async (req, res) => {
 //     console.log("Checking if resume has been uploaded successfully");
 //     try {
-<<<<<<< HEAD
 
 //       // 1. Read uploaded file
 //       const filePath = path.join(uploadDir, req.file.filename);
@@ -166,8 +161,6 @@ router.post('/extractJSON', uploadCloud.single('resume'), async (req, res) => {
 //       }
 //     });
 // });
-=======
->>>>>>> 008d7ee9f33ff9833599faf7b141c2c152064a45
 
 //       // 1. Read uploaded file
 //       const filePath = path.join(uploadDir, req.file.filename);
