@@ -55,108 +55,163 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-//WORKS
-router.post('/uploadFiles', 
-    upload.fields([
-        { name: 'originalResume', maxCount: 1 },
-        { name: 'parsedOutputResume', maxCount: 1 }
-    ]), 
-    async (req, res) => {
-        const { googleId, jobDescription } = req.body;
+const uploadCloud = multer({ storage: multer.memoryStorage() });
+router.post('/uploadFiles', uploadCloud.fields([
+    { name: 'originalResume', maxCount: 1 },
+    { name: 'parsedOutputResume', maxCount: 1 }
+]), async (req, res) => {
+    const originalResumeBuffer = req.files['originalResume'][0].buffer;
+    const parsedOutputResumeBuffer = req.files['parsedOutputResume'][0].buffer;
+    const originalResumeName = req.files['originalResume'][0].originalname;
+    const parsedOutputResumeName = req.files['parsedOutputResume'][0].originalname;
 
-        if(!(await checkIfUserExists(googleId))) {
-            return res.status(400).json({ success: false, message: 'User does not exist' });
-        }
-        //let outputResumeFile;
-        let uniqueKeyPrefix = Date.now() + '-';
-        // axios.get(parsedResumeURL, { responseType: 'arraybuffer' })
-        // .then(response => {
-        //     uniqueKeyPrefix = Date.now() + '-';
-        //     const filePath = path.join(__dirname, '../uploads/cloud', "parsedOutputResume.pdf");
-        //     fs.writeFileSync(filePath, response.data); // Save PDF to disk <- MIGHT HAVE TO BE ASYNC
-        // }).catch(error => {
-        //     console.error("Error fetching parsed resume PDF:", error);
-        //     return res.status(500).json({ success: false, message: 'Error fetching parsed resume PDF' });
-        // });
+    let uniqueKeyPrefix = Date.now() + '-';
+    const resumeKey = uniqueKeyPrefix + 'originalResume.pdf';
+    const parsedResumeKey = uniqueKeyPrefix + "parsedOutputResume.pdf";
 
-
-        //const pathToOriginalResume = path.join(__dirname, '../uploads/cloud', 'originalResume.pdf');
-        //const pathToParsedResume = path.join(__dirname, '../uploads/cloud', "parsedOutputResume.pdf");
-
-        const pathToOriginalResume = req.files['originalResume'][0].path;
-        const pathToParsedResume = req.files['parsedOutputResume'][0].path;
-        
-        const resumeKey = uniqueKeyPrefix + 'originalResume.pdf';
-        const parsedResumeKey = uniqueKeyPrefix + "parsedOutputResume.pdf";
-        try {
-            const sendingOriginalFile = await s3Client.send(new PutObjectCommand({
-                Bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
-                Key: resumeKey,
-                Body: await readFile(pathToOriginalResume),
-                ContentType: 'application/pdf'
-            }));
-        } catch (err) {
-            console.error("Error uploading original resume to S3:", err);
-            return res.status(500).json({ success: false, message: 'Error uploading original resume to S3' });
-        }
-        try {
-            const sendingParsedFile = await s3Client.send(new PutObjectCommand({
-                Bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
-                Key: parsedResumeKey,
-                Body: await readFile(pathToParsedResume),
-                ContentType: 'application/pdf'
-            }));
-        } catch (err) {
-            console.error("Error uploading parsed resume to S3:", err);
-            return res.status(500).json({ success: false, message: 'Error uploading parsed resume to S3' });
-        }
+    try {
+        await s3Client.send(new PutObjectCommand({
+            Bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
+            Key: resumeKey,
+            Body: originalResumeBuffer,
+            ContentType: 'application/pdf'
+        }));
+    } catch (err) {
+        console.error("Error uploading original resume to S3:", err);
+        return res.status(500).json({ success: false, message: 'Error uploading original resume to S3' });
+    }
+    try {
+        await s3Client.send(new PutObjectCommand({
+            Bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
+            Key: parsedResumeKey,
+            Body: parsedOutputResumeBuffer,
+            ContentType: 'application/pdf'
+        }));
+    } catch (err) {
+        console.error("Error uploading parsed resume to S3:", err);
+        return res.status(500).json({ success: false, message: 'Error uploading parsed resume to S3' });
+    }
         
 
-        //URL of the object: https://<bucket-name>.s3.<region>.amazonaws.com/<object-key> <- Not doing this approach cause then we have to make it public
-
-        //save the keys to mongodb
-        /* 
-            1) Create a document of the past query
-            2) Insert into the rightful Document
-        */
-
-        //checking if user exists inside of the user collection
-
-        try {
-           //when returning a promise, it means either resolving or rejecting
-           const document = await DocumentModel.findOne({ googleId: googleId });
-           if (document) {
-                document.pastQueries.push({resume: resumeKey, JobDescription: jobDescription, parsedResume: parsedResumeKey});
-                await document.save();
-           } else {
-                //might have to delete this else statement because we're creating the document model to new user through getAllDocuments route <- DO THIS LATER
-                //instead, might have to throw an error
-                throw new Error("Document not found for the given googleId");
-           }
-        } catch (err) {
-            console.error("Error saving document to MongoDB:", err);
-            return res.status(500).json({ success: false, message: 'Error saving document to MongoDB' });
+    try {
+        //when returning a promise, it means either resolving or rejecting
+        const document = await DocumentModel.findOne({ googleId: googleId });
+        if (document) {
+            document.pastQueries.push({resume: resumeKey, JobDescription: jobDescription, parsedResume: parsedResumeKey});
+            await document.save();
+        } else {
+            //might have to delete this else statement because we're creating the document model to new user through getAllDocuments route <- DO THIS LATER
+            //instead, might have to throw an error
+            throw new Error("Document not found for the given googleId");
         }
+    } catch (err) {
+        console.error("Error saving document to MongoDB:", err);
+        return res.status(500).json({ success: false, message: 'Error saving document to MongoDB' });
+    }
 
-        await fs.unlink(pathToOriginalResume).catch((err) => {
-            if(err.code === "ENOENT") {
-                console.warn("Original resume file not found, nothing to delete:", err.path);
-                //return;
-            } else {
-                console.error("Error deleting original resume file:", err);
-            }
-        });
-        await fs.unlink(pathToParsedResume).catch((err) => {
-           if(err.code === "ENOENT") {
-               console.warn("Parsed resume file not found, nothing to delete:", err.path);
-               //return;
-           } else {
-               console.error("Error deleting parsed resume file:", err);
-           }
-        });
-
-       return res.status(200).json({ success: true, message: 'Files uploaded and document saved successfully' });
+    console.log("Files uploaded successfully:", req.files);
+    res.status(200).json({ success: true, message: 'Files uploaded successfully' });
 });
+// router.post('/uploadFiles', upload.fields([
+//     { name: 'originalResume', maxCount: 1 },
+//     { name: 'parsedOutputResume', maxCount: 1 }
+//     ]), 
+//     async (req, res) => {
+//         const { googleId, jobDescription, prefix } = req.body;
+
+//         if(!(await checkIfUserExists(googleId))) {
+//             return res.status(400).json({ success: false, message: 'User does not exist' });
+//         }
+//         //let outputResumeFile;
+//         let uniqueKeyPrefix = Date.now() + '-';
+//         // axios.get(parsedResumeURL, { responseType: 'arraybuffer' })
+//         // .then(response => {
+//         //     uniqueKeyPrefix = Date.now() + '-';
+//         //     const filePath = path.join(__dirname, '../uploads/cloud', "parsedOutputResume.pdf");
+//         //     fs.writeFileSync(filePath, response.data); // Save PDF to disk <- MIGHT HAVE TO BE ASYNC
+//         // }).catch(error => {
+//         //     console.error("Error fetching parsed resume PDF:", error);
+//         //     return res.status(500).json({ success: false, message: 'Error fetching parsed resume PDF' });
+//         // });
+
+
+//         //const pathToOriginalResume = path.join(__dirname, '../uploads/cloud', 'originalResume.pdf');
+//         //const pathToParsedResume = path.join(__dirname, '../uploads/cloud', "parsedOutputResume.pdf");
+
+//         const pathToOriginalResume = req.files['originalResume'][0].path;
+//         const pathToParsedResume = req.files['parsedOutputResume'][0].path;
+        
+//         const resumeKey = uniqueKeyPrefix + 'originalResume.pdf';
+//         const parsedResumeKey = uniqueKeyPrefix + "parsedOutputResume.pdf";
+//         try {
+//             const sendingOriginalFile = await s3Client.send(new PutObjectCommand({
+//                 Bucket: process.env.AWS_S3_BUCKET_ORIGINAL_RESUME,
+//                 Key: resumeKey,
+//                 Body: await readFile(pathToOriginalResume),
+//                 ContentType: 'application/pdf'
+//             }));
+//         } catch (err) {
+//             console.error("Error uploading original resume to S3:", err);
+//             return res.status(500).json({ success: false, message: 'Error uploading original resume to S3' });
+//         }
+//         try {
+//             const sendingParsedFile = await s3Client.send(new PutObjectCommand({
+//                 Bucket: process.env.AWS_S3_BUCKET_OUTPUT_PARSED_RESUME,
+//                 Key: parsedResumeKey,
+//                 Body: await readFile(pathToParsedResume),
+//                 ContentType: 'application/pdf'
+//             }));
+//         } catch (err) {
+//             console.error("Error uploading parsed resume to S3:", err);
+//             return res.status(500).json({ success: false, message: 'Error uploading parsed resume to S3' });
+//         }
+        
+
+//         //URL of the object: https://<bucket-name>.s3.<region>.amazonaws.com/<object-key> <- Not doing this approach cause then we have to make it public
+
+//         //save the keys to mongodb
+//         /* 
+//             1) Create a document of the past query
+//             2) Insert into the rightful Document
+//         */
+
+//         //checking if user exists inside of the user collection
+
+//         try {
+//            //when returning a promise, it means either resolving or rejecting
+//            const document = await DocumentModel.findOne({ googleId: googleId });
+//            if (document) {
+//                 document.pastQueries.push({resume: resumeKey, JobDescription: jobDescription, parsedResume: parsedResumeKey});
+//                 await document.save();
+//            } else {
+//                 //might have to delete this else statement because we're creating the document model to new user through getAllDocuments route <- DO THIS LATER
+//                 //instead, might have to throw an error
+//                 throw new Error("Document not found for the given googleId");
+//            }
+//         } catch (err) {
+//             console.error("Error saving document to MongoDB:", err);
+//             return res.status(500).json({ success: false, message: 'Error saving document to MongoDB' });
+//         }
+
+//         await fs.unlink(pathToOriginalResume).catch((err) => {
+//             if(err.code === "ENOENT") {
+//                 console.warn("Original resume file not found, nothing to delete:", err.path);
+//                 //return;
+//             } else {
+//                 console.error("Error deleting original resume file:", err);
+//             }
+//         });
+//         await fs.unlink(pathToParsedResume).catch((err) => {
+//            if(err.code === "ENOENT") {
+//                console.warn("Parsed resume file not found, nothing to delete:", err.path);
+//                //return;
+//            } else {
+//                console.error("Error deleting parsed resume file:", err);
+//            }
+//         });
+
+//        return res.status(200).json({ success: true, message: 'Files uploaded and document saved successfully' });
+// });
 
 const createBucket = async (bucketName) => {
     try {
