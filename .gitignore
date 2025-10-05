@@ -5,4 +5,8 @@ client/.gitignore
 server/config.env
 client/config.env
 client/.env
+<<<<<<< HEAD
 server/client.json
+=======
+server/client.json
+>>>>>>> 008d7ee9f33ff9833599faf7b141c2c152064a45

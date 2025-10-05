@@ -28,7 +28,7 @@ function AllPastQueriesPage() {
     const gettingDocuments = async () => {
         let allQueries;
         try {
-            allQueries = await axios.get(`/users/getAllDocuments/${googleId}`);
+            allQueries = await axios.get(`https://resumate-backend-xv4m.onrender.com/users/getAllDocuments/${googleId}`);
         } catch (error) {
             console.error("Error fetching past queries:", error);
             return;
@@ -118,7 +118,7 @@ function AllPastQueriesPage() {
         if (!currentQuery) return alert("No query selected");
 
         try {
-            await axios.delete(`/users/specificDocument/${googleId}`, {
+            await axios.delete(`https://resumate-backend-xv4m.onrender.com/users/specificDocument/${googleId}`, {
                 data: {
                     originalResumeKey: currentQuery.originalResumeKey,
                     parsedResumeKey: currentQuery.parsedResumeKey

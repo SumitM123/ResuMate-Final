@@ -120,7 +120,7 @@ useEffect(
       let responseTex;
       // Send resume + keywords to backend so keywords can be integrated into resume
       try {
-        responseTex = await axios.post('http://localhost:5000/loadingPage/editResume', {
+        responseTex = await axios.post('https://resumate-backend-xv4m.onrender.com/loadingPage/editResume', {
           resumeData,
           jobDescriptionKeywords
         }, {
@@ -137,7 +137,7 @@ useEffect(
       let latexContent;
       try {
         // Pass only the resume string to the LaTeX conversion endpoint
-        latexContent = await axios.put('/loadingPage/changeToLaTeX', { chainResult: responseTex.data.data });
+        latexContent = await axios.put('https://resumate-backend-xv4m.onrender.com/loadingPage/changeToLaTeX', { chainResult: responseTex.data.data });
       } catch (error) {
         console.error("Error in changing to LaTeX:", error);
         return;
@@ -151,7 +151,7 @@ useEffect(
       console.log("Latex content of context from frontend:", userInfo.latexContent);
       try {
         const pdfResponse = await axios.post(
-          '/loadingPage/convertToPDF',
+          'https://resumate-backend-xv4m.onrender.com/loadingPage/convertToPDF',
           { latexContent: latexContent.data.latexResponse},
           { responseType: 'blob' }
         );

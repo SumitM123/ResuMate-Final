@@ -71,7 +71,7 @@ function JobDescription() {
     const jobDescription = jobDescriptionVal;
     console.log("Sending job description to backend:", jobDescription);
     try {
-      const response = await axios.post('http://localhost:5000/loadingPage/JobDescriptionKeyWord', {jobDescription}, {
+      const response = await axios.post('https://resumate-backend-xv4m.onrender.com/loadingPage/JobDescriptionKeyWord', {jobDescription}, {
         headers: { 'Content-Type': 'application/json' }
       });
       return response;
@@ -84,7 +84,7 @@ function JobDescription() {
     const sendToServer = new FormData();
     sendToServer.append('resume', fileUpload);
     try {
-      const serverResponse = await axios.post('http://localhost:5000/loadingPage/extractJSON', sendToServer,
+      const serverResponse = await axios.post('https://resumate-backend-xv4m.onrender.com/loadingPage/extractJSON', sendToServer,
         {
           headers: { 'Content-Type': 'multipart/form-data' }
         }

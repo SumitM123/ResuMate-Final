@@ -65,6 +65,9 @@ const upload = multer({ storage });
 const uploadCloud = multer({ storage: multer.memoryStorage() });
 //might have to combine the JSON extraction and job description extraction into 1
 
+const uploadCloud = multer({ storage: multer.memoryStorage() });
+//might have to combine the JSON extraction and job description extraction into 1
+
 //WORKS
 
 router.post('/extractJSON', uploadCloud.single('resume'), async (req, res) => {
@@ -110,6 +113,7 @@ router.post('/extractJSON', uploadCloud.single('resume'), async (req, res) => {
 //   async (req, res) => {
 //     console.log("Checking if resume has been uploaded successfully");
 //     try {
+<<<<<<< HEAD
 
 //       // 1. Read uploaded file
 //       const filePath = path.join(uploadDir, req.file.filename);
@@ -162,7 +166,60 @@ router.post('/extractJSON', uploadCloud.single('resume'), async (req, res) => {
 //       }
 //     });
 // });
+=======
+>>>>>>> 008d7ee9f33ff9833599faf7b141c2c152064a45
 
+//       // 1. Read uploaded file
+//       const filePath = path.join(uploadDir, req.file.filename);
+//       const pdfBytes = await fs.readFile(filePath);
+
+//       // 2. Encode to base64
+//       const pdfBase64 = Buffer.from(pdfBytes).toString("base64");
+
+//       // 3. Build messages for chat model
+//       const messages = [
+//         new SystemMessage(
+//           "You are a helpful Resume Parser AI assistant. Extract all information from the resume and return it in a structured JSON format."
+//         ),
+//         new HumanMessage({
+//           content: [
+//             {
+//               type: "text",
+//               text: "Please parse this resume and provide the data in the following JSON structure: { personalInfo: {}, experience: [], education: [], skills: [], projects: [], certifications: [] }"
+//             },
+//             {
+//               type: "file",
+//               source_type: "base64",
+//               mime_type: "application/pdf",
+//               data: pdfBase64
+//             }
+//           ]
+//         })
+//       ];
+
+//       // 4. Await response from chat model
+//       const response = await googleGemini.invoke(messages);
+
+//       // 5. Send back model response
+//       res.status(200).json({
+//         success: true,
+//         parsedResume: response.content
+//       });
+//       console.log("JSON has been extracted.");
+//       console.log("The response content object from AI model: " + JSON.stringify(response.content));
+//     } catch (err) {
+//       console.error("Error parsing uploading resume:", err);
+//       res.status(500).json({ success: false, error: err.message });
+//     }
+//     //Any code after the callback function will execute immediately. 
+//     await fs.unlink(path.join(uploadDir, req.file.filename)).catch((err) => {
+//       if(err.code === "ENOENT") {
+//         console.warn("File not found, nothing to delete:", err.path);
+//       } else {
+//         console.error("Error deleting uploaded file:", err);
+//       }
+//     });
+// });
 // router.post('/', upload.fields([
 //     {name: 'resume', maxCount: 1}
 // ]), async (req, res) => {
